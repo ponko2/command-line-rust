@@ -1,0 +1,20 @@
+[package]
+name = "grepr"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+regex.workspace = true
+walkdir.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
+pretty_assertions.workspace = true
+rand.workspace = true
+sys-info.workspace = true
+

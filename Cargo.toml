@@ -11,6 +11,7 @@ predicates = "3.1.4"
 pretty_assertions = "1.4.1"
 rand = "0.10.0"
 regex = "1.12.3"
+sys-info = "0.9.1"
 tempfile = "3.26.0"
 walkdir = "2.5.0"
 
