@@ -6,6 +6,7 @@ members = ["cmd/*"]
 anyhow = "1.0.102"
 assert_cmd = "2.1.2"
 clap = { version = "4.5.60", features = ["derive"] }
+csv = "1.4.0"
 predicates = "3.1.4"
 pretty_assertions = "1.4.1"
 rand = "0.10.0"
