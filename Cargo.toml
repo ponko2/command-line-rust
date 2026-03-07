@@ -1,0 +1,11 @@
+[workspace]
+resolver = "3"
+members = ["cmd/*"]
+
+[workspace.dependencies]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+publish = false
+version = "0.1.0"

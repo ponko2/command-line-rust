@@ -1,0 +1,27 @@
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: commitlint --edit {1}
+pre-commit:
+  parallel: true
+  jobs:
+    - name: EditorConfig
+      run: editorconfig-checker {staged_files}
+    - name: Oxfmt
+      run: oxfmt --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true
+    - name: Rust
+      group:
+        parallel: false
+        jobs:
+          - name: rustfmt
+            run: cargo fmt -- {staged_files}
+            glob: "*.rs"
+            stage_fixed: true
+          - name: Clippy
+            run: cargo clippy --allow-dirty --fix -- -D warnings
+            glob: "*.rs"
+            stage_fixed: true
+    - name: yamllint
+      run: yamllint --list-files --strict {staged_files}
+      glob: "*.{yaml,yml}"

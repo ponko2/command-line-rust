@@ -1,0 +1,65 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "command": "nix develop --no-warn-dirty --quiet --command cargo build",
+      "problemMatcher": ["$rustc"],
+      "group": "build",
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "label": "rust: cargo build"
+    },
+    {
+      "type": "shell",
+      "command": "nix develop --no-warn-dirty --quiet --command cargo check",
+      "problemMatcher": ["$rustc"],
+      "group": "build",
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "label": "rust: cargo check"
+    },
+    {
+      "type": "shell",
+      "command": "nix develop --no-warn-dirty --quiet --command cargo clean",
+      "problemMatcher": ["$rustc"],
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "label": "rust: cargo clean"
+    },
+    {
+      "type": "shell",
+      "command": "nix develop --no-warn-dirty --quiet --command cargo clippy",
+      "problemMatcher": ["$rustc"],
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "label": "rust: cargo clippy"
+    },
+    {
+      "type": "shell",
+      "command": "nix develop --no-warn-dirty --quiet --command cargo run",
+      "problemMatcher": ["$rustc"],
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "label": "rust: cargo run"
+    },
+    {
+      "type": "shell",
+      "command": "nix develop --no-warn-dirty --quiet --command cargo test",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "label": "rust: cargo test"
+    }
+  ]
+}
