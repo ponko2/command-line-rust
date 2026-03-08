@@ -28,6 +28,16 @@
               fenix.overlays.default
             ];
           };
+          apps = {
+            commitlint = {
+              type = "app";
+              program = "${pkgs.commitlint}/bin/commitlint";
+            };
+            oxfmt = {
+              type = "app";
+              program = "${pkgs.oxfmt}/bin/oxfmt";
+            };
+          };
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
               (pkgs.fenix.fromToolchainFile {

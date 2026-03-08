@@ -187,13 +187,11 @@ jobs:
           persist-credentials: false
       - name: Set up Nix
         uses: cachix/install-nix-action@19effe9fe722874e6d46dd7182e4b8b7a43c4a99 # v31.10.0
-      - name: Install Nix dependencies
-        run: nix develop --command true
       - name: Validate all commits from PR
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: nix develop --command commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+        run: nix --quiet run .#commitlint -- --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
   editorconfig:
     name: EditorConfig
     needs: verify-author
@@ -224,10 +222,8 @@ jobs:
           persist-credentials: false
       - name: Set up Nix
         uses: cachix/install-nix-action@19effe9fe722874e6d46dd7182e4b8b7a43c4a99 # v31.10.0
-      - name: Install Nix dependencies
-        run: nix develop --command true
       - name: Run Oxfmt
-        run: nix develop --command oxfmt --check
+        run: nix --quiet run .#oxfmt -- --check
   rustfmt:
     name: rustfmt
     if: ${{ always() && !failure() && !cancelled() &&
