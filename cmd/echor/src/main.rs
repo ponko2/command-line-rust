@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use echor::Options;
+use std::io;
 
 #[derive(Debug, Parser)]
 #[command(version, about)]
@@ -25,10 +26,20 @@ impl From<Args> for Options {
 }
 
 fn main() {
-    if let Err(err) = run(Args::parse()) {
-        eprintln!("{}", err);
-        std::process::exit(1);
+    let Err(err) = run(Args::parse()) else {
+        return;
+    };
+
+    // Handle broken pipe gracefully
+    if err
+        .downcast_ref::<io::Error>()
+        .is_some_and(|err| err.kind() == io::ErrorKind::BrokenPipe)
+    {
+        return;
     }
+
+    eprintln!("{err}");
+    std::process::exit(1);
 }
 
 fn run(args: Args) -> Result<()> {
