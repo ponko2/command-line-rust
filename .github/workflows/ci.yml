@@ -68,15 +68,22 @@ jobs:
         uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5
         with:
           files_yaml: |
+            common: &common
+              - .github/workflows/ci.yml
+            dependencies: &dependencies
+              - flake.lock
+              - flake.nix
             actions:
               - "**/action.{yaml,yml}"
               - ".github/workflows/*.{yaml,yml}"
             rust:
+              - *common
+              - *dependencies
               - "**/*.rs"
               - "**/Cargo.toml"
               - Cargo.lock
-              - flake.lock
             yamllint:
+              - *common
               - "**/*.{yaml,yml}"
   actionlint:
     name: actionlint
