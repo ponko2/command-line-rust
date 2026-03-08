@@ -1,9 +1,6 @@
 use anyhow::Result;
+use catr::Options;
 use clap::Parser;
-use std::{
-    fs::File,
-    io::{self, BufRead, BufReader},
-};
 
 #[derive(Debug, Parser)]
 #[command(version, about)]
@@ -22,6 +19,16 @@ struct Args {
     number_nonblank_lines: bool,
 }
 
+impl From<Args> for Options {
+    fn from(args: Args) -> Self {
+        Self {
+            files: args.files,
+            number_lines: args.number_lines,
+            number_nonblank_lines: args.number_nonblank_lines,
+        }
+    }
+}
+
 fn main() {
     if let Err(err) = run(Args::parse()) {
         eprintln!("{err}");
@@ -30,36 +37,6 @@ fn main() {
 }
 
 fn run(args: Args) -> Result<()> {
-    for filename in args.files {
-        match open(&filename) {
-            Err(err) => eprintln!("{filename}: {err}"),
-            Ok(file) => {
-                let mut prev_num = 0;
-                for (line_num, line_result) in file.lines().enumerate() {
-                    let line = line_result?;
-                    if args.number_lines {
-                        println!("{:6}\t{line}", line_num + 1);
-                    } else if args.number_nonblank_lines {
-                        if line.is_empty() {
-                            println!();
-                        } else {
-                            prev_num += 1;
-                            println!("{prev_num:6}\t{line}");
-                        }
-                    } else {
-                        println!("{line}");
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(())
-}
-
-fn open(filename: &str) -> Result<Box<dyn BufRead>> {
-    match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
-        _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
-    }
+    let options = args.into();
+    catr::run(&options)
 }

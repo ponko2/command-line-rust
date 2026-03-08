@@ -1,9 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use std::{
-    fs::File,
-    io::{self, BufRead, BufReader, Read},
-};
+use headr::Options;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -34,6 +31,16 @@ struct Args {
     bytes: Option<u64>,
 }
 
+impl From<Args> for Options {
+    fn from(args: Args) -> Self {
+        Self {
+            files: args.files,
+            lines: args.lines,
+            bytes: args.bytes,
+        }
+    }
+}
+
 fn main() {
     if let Err(err) = run(Args::parse()) {
         eprintln!("{err}");
@@ -42,41 +49,6 @@ fn main() {
 }
 
 fn run(args: Args) -> Result<()> {
-    let num_files = args.files.len();
-
-    for (file_num, filename) in args.files.iter().enumerate() {
-        match open(filename) {
-            Err(err) => eprintln!("{filename}: {err}"),
-            Ok(mut file) => {
-                if num_files > 1 {
-                    println!("{}==> {filename} <==", if file_num > 0 { "\n" } else { "" },);
-                }
-
-                if let Some(num_bytes) = args.bytes {
-                    let mut buffer = vec![0; num_bytes as usize];
-                    let bytes_read = file.read(&mut buffer)?;
-                    print!("{}", String::from_utf8_lossy(&buffer[..bytes_read]));
-                } else {
-                    let mut line = String::new();
-                    for _ in 0..args.lines {
-                        let bytes = file.read_line(&mut line)?;
-                        if bytes == 0 {
-                            break;
-                        }
-                        print!("{line}");
-                        line.clear();
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(())
-}
-
-fn open(filename: &str) -> Result<Box<dyn BufRead>> {
-    match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
-        _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
-    }
+    let options = args.into();
+    headr::run(&options)
 }
