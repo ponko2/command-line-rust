@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use regex::{Regex, RegexBuilder};
 use std::{
     fs::{self, File},
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Write},
     mem,
 };
 use walkdir::WalkDir;
@@ -17,7 +17,7 @@ pub struct Options {
     pub invert: bool,
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let pattern = RegexBuilder::new(&options.pattern)
         .case_insensitive(options.insensitive)
         .build()
@@ -25,12 +25,13 @@ pub fn run(options: &Options) -> Result<()> {
 
     let entries = find_files(&options.files, options.recursive);
     let num_files = entries.len();
-    let print = |fname: &str, val: &str| {
+    let mut print = |fname: &str, val: &str| -> Result<()> {
         if num_files > 1 {
-            print!("{fname}:{val}");
+            write!(writer, "{fname}:{val}")?;
         } else {
-            print!("{val}");
+            write!(writer, "{val}")?;
         }
+        Ok(())
     };
 
     for entry in entries {
@@ -42,10 +43,10 @@ pub fn run(options: &Options) -> Result<()> {
                     Err(err) => eprintln!("{err}"),
                     Ok(matches) => {
                         if options.count {
-                            print(&filename, &format!("{}\n", matches.len()));
+                            print(&filename, &format!("{}\n", matches.len()))?;
                         } else {
                             for line in &matches {
-                                print(&filename, line);
+                                print(&filename, line)?;
                             }
                         }
                     }

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use cutr::{Options, OptionsExtract};
-use std::io;
+use std::io::{self, BufWriter, Write};
 
 #[derive(Debug, Parser)]
 #[command(version, about)]
@@ -73,6 +73,10 @@ fn main() {
 }
 
 fn run(args: Args) -> Result<()> {
+    let stdout = io::stdout();
+    let mut writer = BufWriter::new(stdout.lock());
     let options = args.into();
-    cutr::run(&options)
+    cutr::run(&mut writer, &options)?;
+    writer.flush()?;
+    Ok(())
 }

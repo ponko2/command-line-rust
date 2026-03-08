@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::{
     fs::File,
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Write},
 };
 
 #[derive(Debug)]
@@ -11,7 +11,7 @@ pub struct Options {
     pub number_nonblank_lines: bool,
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     for filename in &options.files {
         match open(filename) {
             Err(err) => eprintln!("{filename}: {err}"),
@@ -20,16 +20,16 @@ pub fn run(options: &Options) -> Result<()> {
                 for (line_num, line_result) in file.lines().enumerate() {
                     let line = line_result?;
                     if options.number_lines {
-                        println!("{:6}\t{line}", line_num + 1);
+                        writeln!(writer, "{:6}\t{line}", line_num + 1)?;
                     } else if options.number_nonblank_lines {
                         if line.is_empty() {
-                            println!();
+                            writeln!(writer)?;
                         } else {
                             prev_num += 1;
-                            println!("{prev_num:6}\t{line}");
+                            writeln!(writer, "{prev_num:6}\t{line}")?;
                         }
                     } else {
-                        println!("{line}");
+                        writeln!(writer, "{line}")?;
                     }
                 }
             }

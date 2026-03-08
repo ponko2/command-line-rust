@@ -4,7 +4,7 @@ use regex::RegexBuilder;
 use std::{
     ffi::OsStr,
     fs::{self, File},
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Write},
     path::PathBuf,
 };
 use walkdir::WalkDir;
@@ -23,7 +23,7 @@ struct Fortune {
     text: String,
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let pattern = options
         .pattern
         .as_deref()
@@ -49,16 +49,17 @@ pub fn run(options: &Options) -> Result<()> {
                     eprintln!("({})\n%", fortune.source);
                     prev_source = Some(&fortune.source);
                 }
-                println!("{}\n%", fortune.text);
+                writeln!(writer, "{}\n%", fortune.text)?;
             }
         }
         _ => {
-            println!(
+            writeln!(
+                writer,
                 "{}",
                 pick_fortune(&fortunes, options.seed)
                     .or_else(|| Some("No fortunes found".to_string()))
                     .unwrap()
-            );
+            )?;
         }
     }
 

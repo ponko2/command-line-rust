@@ -3,7 +3,7 @@ use anyhow::{Result, anyhow, bail};
 use std::{
     cmp::Ordering::*,
     fs::File,
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Write},
 };
 
 #[derive(Debug)]
@@ -23,7 +23,7 @@ enum Column<'a> {
     Col3(&'a str),
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let file1 = &options.file1;
     let file2 = &options.file2;
 
@@ -42,7 +42,7 @@ pub fn run(options: &Options) -> Result<()> {
     let mut lines1 = open(file1)?.lines().map_while(Result::ok).map(case);
     let mut lines2 = open(file2)?.lines().map_while(Result::ok).map(case);
 
-    let print = |col: Column| {
+    let mut print = |col: Column| -> Result<()> {
         let mut columns = vec![];
         match col {
             Col1(val) => {
@@ -72,8 +72,10 @@ pub fn run(options: &Options) -> Result<()> {
         };
 
         if !columns.is_empty() {
-            println!("{}", columns.join(&options.delimiter));
+            writeln!(writer, "{}", columns.join(&options.delimiter))?;
         }
+
+        Ok(())
     };
 
     let mut line1 = lines1.next();
@@ -83,25 +85,25 @@ pub fn run(options: &Options) -> Result<()> {
         match (&line1, &line2) {
             (Some(val1), Some(val2)) => match val1.cmp(val2) {
                 Equal => {
-                    print(Col3(val1));
+                    print(Col3(val1))?;
                     line1 = lines1.next();
                     line2 = lines2.next();
                 }
                 Less => {
-                    print(Col1(val1));
+                    print(Col1(val1))?;
                     line1 = lines1.next();
                 }
                 Greater => {
-                    print(Col2(val2));
+                    print(Col2(val2))?;
                     line2 = lines2.next();
                 }
             },
             (Some(val1), None) => {
-                print(Col1(val1));
+                print(Col1(val1))?;
                 line1 = lines1.next();
             }
             (None, Some(val2)) => {
-                print(Col2(val2));
+                print(Col2(val2))?;
                 line2 = lines2.next();
             }
             _ => (),

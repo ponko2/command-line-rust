@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use anyhow::Result;
 use clap::ValueEnum;
 use regex::Regex;
@@ -22,7 +24,7 @@ pub enum EntryType {
     Link,
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let type_filter = |entry: &DirEntry| {
         options.entry_types.is_empty()
             || options
@@ -58,7 +60,7 @@ pub fn run(options: &Options) -> Result<()> {
             .map(|entry| entry.path().display().to_string())
             .collect::<Vec<_>>();
 
-        println!("{}", entries.join("\n"));
+        writeln!(writer, "{}", entries.join("\n"))?;
     }
 
     Ok(())

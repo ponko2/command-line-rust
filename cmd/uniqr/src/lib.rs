@@ -7,24 +7,18 @@ use std::{
 #[derive(Debug)]
 pub struct Options {
     pub in_file: String,
-    pub out_file: Option<String>,
     pub count: bool,
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let mut file = open(&options.in_file).map_err(|err| anyhow!("{}: {err}", options.in_file))?;
-
-    let mut out_file: Box<dyn Write> = match &options.out_file {
-        Some(out_name) => Box::new(File::create(out_name)?),
-        _ => Box::new(io::stdout()),
-    };
 
     let mut print = |num: u64, text: &str| -> Result<()> {
         if num > 0 {
             if options.count {
-                write!(out_file, "{num:>4} {text}")?;
+                write!(writer, "{num:>4} {text}")?;
             } else {
-                write!(out_file, "{text}")?;
+                write!(writer, "{text}")?;
             }
         };
         Ok(())

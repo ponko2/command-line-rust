@@ -3,7 +3,7 @@ mod owner;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use owner::Owner;
-use std::{fs, os::unix::fs::MetadataExt, path::PathBuf};
+use std::{fs, io::Write, os::unix::fs::MetadataExt, path::PathBuf};
 use tabular::{Row, Table};
 use users::{get_group_by_gid, get_user_by_uid};
 
@@ -14,13 +14,13 @@ pub struct Options {
     pub show_hidden: bool,
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let paths = find_files(&options.paths, options.show_hidden)?;
     if options.long {
-        println!("{}", format_output(&paths)?);
+        writeln!(writer, "{}", format_output(&paths)?)?;
     } else {
         for path in paths {
-            println!("{}", path.display());
+            writeln!(writer, "{}", path.display())?;
         }
     }
     Ok(())

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::{
     fs::File,
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Write},
 };
 
 #[derive(Debug, Clone)]
@@ -21,7 +21,7 @@ struct FileInfo {
     num_chars: usize,
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let mut options = options.clone();
     if [options.words, options.bytes, options.chars, options.lines]
         .iter()
@@ -42,7 +42,8 @@ pub fn run(options: &Options) -> Result<()> {
             Err(err) => eprintln!("{filename}: {err}"),
             Ok(file) => {
                 if let Ok(info) = count(file) {
-                    println!(
+                    writeln!(
+                        writer,
                         "{}{}{}{}{}",
                         format_field(info.num_lines, options.lines),
                         format_field(info.num_words, options.words),
@@ -53,7 +54,7 @@ pub fn run(options: &Options) -> Result<()> {
                         } else {
                             format!(" {filename}")
                         },
-                    );
+                    )?;
 
                     total_lines += info.num_lines;
                     total_words += info.num_words;
@@ -65,13 +66,14 @@ pub fn run(options: &Options) -> Result<()> {
     }
 
     if options.files.len() > 1 {
-        println!(
+        writeln!(
+            writer,
             "{}{}{}{} total",
             format_field(total_lines, options.lines),
             format_field(total_words, options.words),
             format_field(total_bytes, options.bytes),
             format_field(total_chars, options.chars)
-        );
+        )?;
     }
 
     Ok(())

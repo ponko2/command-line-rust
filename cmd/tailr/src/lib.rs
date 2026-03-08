@@ -2,7 +2,7 @@ use crate::TakeValue::*;
 use anyhow::{Result, anyhow, bail};
 use std::{
     fs::File,
-    io::{BufRead, BufReader, Read, Seek, SeekFrom},
+    io::{BufRead, BufReader, Read, Seek, SeekFrom, Write},
 };
 
 #[derive(Debug)]
@@ -19,7 +19,7 @@ enum TakeValue {
     TakeNum(i64),
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let lines = parse_num(&options.lines).map_err(|err| anyhow!("illegal line count -- {err}"))?;
 
     let bytes = options
@@ -35,15 +35,19 @@ pub fn run(options: &Options) -> Result<()> {
             Err(err) => eprintln!("{filename}: {err}"),
             Ok(file) => {
                 if !options.quiet && num_files > 1 {
-                    println!("{}==> {filename} <==", if file_num > 0 { "\n" } else { "" },);
+                    writeln!(
+                        writer,
+                        "{}==> {filename} <==",
+                        if file_num > 0 { "\n" } else { "" },
+                    )?;
                 }
 
                 let (total_lines, total_bytes) = count_lines_bytes(filename)?;
                 let file = BufReader::new(file);
                 if let Some(num_bytes) = &bytes {
-                    print_bytes(file, num_bytes, total_bytes)?;
+                    print_bytes(writer, file, num_bytes, total_bytes)?;
                 } else {
-                    print_lines(file, &lines, total_lines)?;
+                    print_lines(writer, file, &lines, total_lines)?;
                 }
             }
         }
@@ -88,20 +92,30 @@ fn count_lines_bytes(filename: &str) -> Result<(i64, i64)> {
     Ok((num_lines, num_bytes))
 }
 
-fn print_bytes<T: Read + Seek>(mut file: T, num_bytes: &TakeValue, total_bytes: i64) -> Result<()> {
+fn print_bytes(
+    writer: &mut impl Write,
+    mut file: impl Read + Seek,
+    num_bytes: &TakeValue,
+    total_bytes: i64,
+) -> Result<()> {
     if let Some(start) = get_start_index(num_bytes, total_bytes) {
         file.seek(SeekFrom::Start(start))?;
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer)?;
         if !buffer.is_empty() {
-            print!("{}", String::from_utf8_lossy(&buffer));
+            write!(writer, "{}", String::from_utf8_lossy(&buffer))?;
         }
     }
 
     Ok(())
 }
 
-fn print_lines(mut file: impl BufRead, num_lines: &TakeValue, total_lines: i64) -> Result<()> {
+fn print_lines(
+    writer: &mut impl Write,
+    mut file: impl BufRead,
+    num_lines: &TakeValue,
+    total_lines: i64,
+) -> Result<()> {
     if let Some(start) = get_start_index(num_lines, total_lines) {
         let mut line_num = 0;
         let mut buf = Vec::new();
@@ -111,7 +125,7 @@ fn print_lines(mut file: impl BufRead, num_lines: &TakeValue, total_lines: i64) 
                 break;
             }
             if line_num >= start {
-                print!("{}", String::from_utf8_lossy(&buf));
+                write!(writer, "{}", String::from_utf8_lossy(&buf))?;
             }
             line_num += 1;
             buf.clear();

@@ -2,6 +2,7 @@ use ansi_term::Style;
 use anyhow::{Result, bail};
 use chrono::{Datelike, Local, NaiveDate};
 use itertools::izip;
+use std::io::Write;
 
 #[derive(Debug)]
 pub struct Options {
@@ -26,7 +27,7 @@ const MONTH_NAMES: [&str; 12] = [
     "December",
 ];
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let today = Local::now().date_naive();
     let mut month = options.month.as_deref().map(parse_month).transpose()?;
     let mut year = options.year;
@@ -43,10 +44,10 @@ pub fn run(options: &Options) -> Result<()> {
     match month {
         Some(month) => {
             let lines = format_month(year, month, true, today);
-            println!("{}", lines.join("\n"));
+            writeln!(writer, "{}", lines.join("\n"))?;
         }
         None => {
-            println!("{year:>32}");
+            writeln!(writer, "{year:>32}")?;
             let months: Vec<_> = (1..=12)
                 .map(|month| format_month(year, month, false, today))
                 .collect();
@@ -54,10 +55,10 @@ pub fn run(options: &Options) -> Result<()> {
             for (i, chunk) in months.chunks(3).enumerate() {
                 if let [m1, m2, m3] = chunk {
                     for lines in izip!(m1, m2, m3) {
-                        println!("{}{}{}", lines.0, lines.1, lines.2);
+                        writeln!(writer, "{}{}{}", lines.0, lines.1, lines.2)?;
                     }
                     if i < 3 {
-                        println!();
+                        writeln!(writer)?;
                     }
                 }
             }

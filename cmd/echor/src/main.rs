@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use echor::Options;
-use std::io;
+use std::io::{self, BufWriter, Write};
 
 #[derive(Debug, Parser)]
 #[command(version, about)]
@@ -43,6 +43,10 @@ fn main() {
 }
 
 fn run(args: Args) -> Result<()> {
+    let stdout = io::stdout();
+    let mut writer = BufWriter::new(stdout.lock());
     let options = args.into();
-    echor::run(&options)
+    echor::run(&mut writer, &options)?;
+    writer.flush()?;
+    Ok(())
 }

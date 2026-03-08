@@ -3,7 +3,7 @@ use csv::{ReaderBuilder, StringRecord, WriterBuilder};
 use regex::Regex;
 use std::{
     fs::File,
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Write},
     num::NonZeroUsize,
     ops::Range,
 };
@@ -31,7 +31,7 @@ enum Extract {
     Chars(PositionList),
 }
 
-pub fn run(options: &Options) -> Result<()> {
+pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let delim_bytes = options.delimiter.as_bytes();
     if delim_bytes.len() != 1 {
         bail!(r#"--delim "{}" must be a single byte"#, options.delimiter);
@@ -86,12 +86,12 @@ pub fn run(options: &Options) -> Result<()> {
                 }
                 Extract::Bytes(byte_pos) => {
                     for line in file.lines() {
-                        println!("{}", extract_bytes(&line?, byte_pos));
+                        writeln!(writer, "{}", extract_bytes(&line?, byte_pos))?;
                     }
                 }
                 Extract::Chars(char_pos) => {
                     for line in file.lines() {
-                        println!("{}", extract_chars(&line?, char_pos));
+                        writeln!(writer, "{}", extract_chars(&line?, char_pos))?;
                     }
                 }
             },
