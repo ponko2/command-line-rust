@@ -23,6 +23,7 @@ jobs:
       - clippy
       - commitlint
       - editorconfig
+      - oxfmt
       - rustfmt
       - test
       - yamllint
@@ -209,6 +210,24 @@ jobs:
         uses: editorconfig-checker/action-editorconfig-checker@d2ed4fd072ae6f887e9407c909af0f585d2ad9f4 # v2
       - name: Run EditorConfig checker
         run: editorconfig-checker
+  oxfmt:
+    name: Oxfmt
+    needs: verify-author
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up Nix
+        uses: cachix/install-nix-action@19effe9fe722874e6d46dd7182e4b8b7a43c4a99 # v31.10.0
+      - name: Install Nix dependencies
+        run: nix develop --command true
+      - name: Run Oxfmt
+        run: nix develop --command oxfmt --check
   rustfmt:
     name: rustfmt
     if: ${{ always() && !failure() && !cancelled() &&
