@@ -3,7 +3,7 @@
   "tasks": [
     {
       "type": "shell",
-      "command": "nix develop --no-warn-dirty --quiet --command cargo build",
+      "command": "nix --no-warn-dirty --quiet develop --command cargo build",
       "problemMatcher": ["$rustc"],
       "group": "build",
       "options": {
@@ -13,7 +13,7 @@
     },
     {
       "type": "shell",
-      "command": "nix develop --no-warn-dirty --quiet --command cargo check",
+      "command": "nix --no-warn-dirty --quiet develop --command cargo check",
       "problemMatcher": ["$rustc"],
       "group": "build",
       "options": {
@@ -23,7 +23,7 @@
     },
     {
       "type": "shell",
-      "command": "nix develop --no-warn-dirty --quiet --command cargo clean",
+      "command": "nix --no-warn-dirty --quiet develop --command cargo clean",
       "problemMatcher": ["$rustc"],
       "options": {
         "cwd": "${fileDirname}"
@@ -32,7 +32,7 @@
     },
     {
       "type": "shell",
-      "command": "nix develop --no-warn-dirty --quiet --command cargo clippy",
+      "command": "nix --no-warn-dirty --quiet develop --command cargo clippy",
       "problemMatcher": ["$rustc"],
       "options": {
         "cwd": "${fileDirname}"
@@ -41,7 +41,7 @@
     },
     {
       "type": "shell",
-      "command": "nix develop --no-warn-dirty --quiet --command cargo run",
+      "command": "nix --no-warn-dirty --quiet develop --command cargo run",
       "problemMatcher": ["$rustc"],
       "options": {
         "cwd": "${fileDirname}"
@@ -50,7 +50,7 @@
     },
     {
       "type": "shell",
-      "command": "nix develop --no-warn-dirty --quiet --command cargo test",
+      "command": "nix --no-warn-dirty --quiet develop --command cargo test",
       "problemMatcher": ["$rustc"],
       "group": {
         "kind": "test",
