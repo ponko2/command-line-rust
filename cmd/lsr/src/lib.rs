@@ -5,7 +5,7 @@ use chrono::{DateTime, Local};
 use owner::Owner;
 use std::{fs, io::Write, os::unix::fs::MetadataExt, path::PathBuf};
 use tabular::{Row, Table};
-use users::{get_group_by_gid, get_user_by_uid};
+use uzers::{get_group_by_gid, get_user_by_uid};
 
 #[derive(Debug)]
 pub struct Options {
