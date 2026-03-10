@@ -1,7 +1,7 @@
-use ansi_term::Style;
 use anyhow::{Result, bail};
 use chrono::{Datelike, Local, NaiveDate};
 use itertools::izip;
+use owo_colors::OwoColorize;
 use std::io::Write;
 
 #[derive(Debug)]
@@ -127,7 +127,7 @@ fn format_month(year: i32, month: u32, print_year: bool, today: NaiveDate) -> Ve
     days.extend((first.day()..=last.day()).map(|num| {
         let fmt = format!("{num:>2}");
         if is_today(num) {
-            Style::new().reverse().paint(fmt).to_string()
+            fmt.reversed().to_string()
         } else {
             fmt
         }
