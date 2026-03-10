@@ -4,7 +4,7 @@ use predicates::prelude::*;
 use pretty_assertions::assert_eq;
 use rand::{RngExt, distr::Alphanumeric};
 use std::{fs, path::Path};
-use sys_info::os_type;
+use sysinfo::System;
 
 const BUSTLE: &str = "tests/inputs/bustle.txt";
 const EMPTY: &str = "tests/inputs/empty.txt";
@@ -58,11 +58,12 @@ fn warns_bad_file() -> Result<()> {
 
 fn run(args: &[&str], expected_file: &str) -> Result<()> {
     let windows_file = format!("{expected_file}.windows");
-    let expected_file = if os_type().unwrap() == "Windows" && Path::new(&windows_file).is_file() {
-        &windows_file
-    } else {
-        expected_file
-    };
+    let expected_file =
+        if System::name().unwrap() == "Windows" && Path::new(&windows_file).is_file() {
+            &windows_file
+        } else {
+            expected_file
+        };
 
     let expected = fs::read_to_string(expected_file)?;
     let output = cargo_bin_cmd!().args(args).output().expect("fail");
