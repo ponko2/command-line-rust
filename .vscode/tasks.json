@@ -41,16 +41,7 @@
     },
     {
       "type": "shell",
-      "command": "nix --no-warn-dirty --quiet develop --command cargo run",
-      "problemMatcher": ["$rustc"],
-      "options": {
-        "cwd": "${fileDirname}"
-      },
-      "label": "rust: cargo run"
-    },
-    {
-      "type": "shell",
-      "command": "nix --no-warn-dirty --quiet develop --command cargo test",
+      "command": "nix --no-warn-dirty --quiet develop --command cargo nextest run",
       "problemMatcher": ["$rustc"],
       "group": {
         "kind": "test",
@@ -59,7 +50,16 @@
       "options": {
         "cwd": "${fileDirname}"
       },
-      "label": "rust: cargo test"
+      "label": "rust: cargo nextest run"
+    },
+    {
+      "type": "shell",
+      "command": "nix --no-warn-dirty --quiet develop --command cargo run",
+      "problemMatcher": ["$rustc"],
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "label": "rust: cargo run"
     }
   ]
 }

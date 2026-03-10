@@ -276,7 +276,7 @@ jobs:
       - name: Set test permissions
         run: ./cmd/lsr/set-test-perms.sh ./cmd/lsr
       - name: Run Test
-        run: nix develop --command cargo test --locked
+        run: nix develop --command cargo nextest run --locked
   yamllint:
     name: yamllint
     if: ${{ always() && !failure() && !cancelled() &&
