@@ -4,7 +4,10 @@ use anyhow::Result;
 use chrono::{DateTime, Local};
 use owner::Owner;
 use std::{fs, io::Write, os::unix::fs::MetadataExt, path::PathBuf};
-use tabular::{Row, Table};
+use tabled::{
+    Table, Tabled,
+    settings::{Alignment, Padding, Style, object::Columns},
+};
 use uzers::{get_group_by_gid, get_user_by_uid};
 
 #[derive(Debug)]
@@ -12,6 +15,20 @@ pub struct Options {
     pub paths: Vec<String>,
     pub long: bool,
     pub show_hidden: bool,
+}
+
+#[derive(Tabled)]
+struct FileEntry {
+    file_type: &'static str,
+    #[tabled(display = "format_mode")]
+    mode: u32,
+    nlink: u64,
+    owner: String,
+    group: String,
+    size: u64,
+    #[tabled(display = "format_modified")]
+    modified: DateTime<Local>,
+    name: String,
 }
 
 pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
@@ -54,15 +71,13 @@ fn find_files(paths: &[String], show_hidden: bool) -> Result<Vec<PathBuf>> {
 }
 
 fn format_output(paths: &[PathBuf]) -> Result<String> {
-    //         1   2     3     4     5     6     7     8
-    let fmt = "{:<}{:<}  {:>}  {:<}  {:<}  {:>}  {:<}  {:<}";
-    let mut table = Table::new(fmt);
+    let mut file_entries = vec![];
 
     for path in paths {
         let metadata = path.metadata()?;
 
         let uid = metadata.uid();
-        let user = get_user_by_uid(uid)
+        let owner = get_user_by_uid(uid)
             .map(|u| u.name().to_string_lossy().into_owned())
             .unwrap_or_else(|| uid.to_string());
 
@@ -71,35 +86,44 @@ fn format_output(paths: &[PathBuf]) -> Result<String> {
             .map(|g| g.name().to_string_lossy().into_owned())
             .unwrap_or_else(|| gid.to_string());
 
-        let file_type = if path.is_dir() { "d" } else { "-" };
-        let perms = format_mode(metadata.mode());
-        let modified: DateTime<Local> = DateTime::from(metadata.modified()?);
-
-        table.add_row(
-            Row::new()
-                .with_cell(file_type) // 1
-                .with_cell(perms) // 2
-                .with_cell(metadata.nlink()) // 3
-                .with_cell(user) // 4
-                .with_cell(group) // 5
-                .with_cell(metadata.len()) // 6
-                .with_cell(modified.format("%b %d %y %H:%M")) // 7
-                .with_cell(path.display()), // 8
-        );
+        file_entries.push(FileEntry {
+            file_type: if path.is_dir() { "d" } else { "-" },
+            mode: metadata.mode(),
+            nlink: metadata.nlink(),
+            owner,
+            group,
+            size: metadata.len(),
+            modified: DateTime::from(metadata.modified()?),
+            name: path.display().to_string(),
+        });
     }
 
-    Ok(format!("{table}"))
+    let mut table = Table::nohead(file_entries);
+    table
+        .with(Style::empty())
+        .with(Padding::zero())
+        .modify(Columns::new(2..), Padding::new(2, 0, 0, 0))
+        .modify(Columns::new(2..=2), Alignment::right())
+        .modify(Columns::new(5..=5), Alignment::right());
+
+    Ok(table.to_string())
 }
 
 /// Given a file mode in octal format like 0o751,
 /// return a string like "rwxr-x--x"
-fn format_mode(mode: u32) -> String {
+fn format_mode(mode: &u32) -> String {
     format!(
         "{}{}{}",
-        mk_triple(mode, Owner::User),
-        mk_triple(mode, Owner::Group),
-        mk_triple(mode, Owner::Other),
+        mk_triple(*mode, Owner::User),
+        mk_triple(*mode, Owner::Group),
+        mk_triple(*mode, Owner::Other),
     )
+}
+
+/// Given a [`DateTime<Local>`],
+/// return a string like "Mar 10 26 17:24"
+fn format_modified(time: &DateTime<Local>) -> String {
+    time.format("%b %d %y %H:%M").to_string()
 }
 
 /// Given an octal number like 0o500 and an [`Owner`],
@@ -267,7 +291,7 @@ mod test {
 
     #[test]
     fn test_format_mode() {
-        assert_eq!(format_mode(0o755), "rwxr-xr-x");
-        assert_eq!(format_mode(0o421), "r---w---x");
+        assert_eq!(format_mode(&0o755), "rwxr-xr-x");
+        assert_eq!(format_mode(&0o421), "r---w---x");
     }
 }
