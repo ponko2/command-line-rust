@@ -16,5 +16,4 @@ assert_cmd.workspace = true
 predicates.workspace = true
 pretty_assertions.workspace = true
 rand.workspace = true
-sys-info.workspace = true
-
+sysinfo.workspace = true
