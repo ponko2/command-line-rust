@@ -60,7 +60,5 @@ fn run(args: Args) -> Result<()> {
         }
     };
     let options = args.into();
-    uniqr::run(&mut writer, &options)?;
-    writer.flush()?;
-    Ok(())
+    uniqr::run(&mut writer, &options)
 }

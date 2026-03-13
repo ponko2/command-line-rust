@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use std::io::{self, BufWriter, Write};
+use std::io::{self, BufWriter};
 use wcr::Options;
 
 #[derive(Debug, Parser)]
@@ -63,7 +63,5 @@ fn run(args: Args) -> Result<()> {
     let stdout = io::stdout();
     let mut writer = BufWriter::new(stdout.lock());
     let options = args.into();
-    wcr::run(&mut writer, &options)?;
-    writer.flush()?;
-    Ok(())
+    wcr::run(&mut writer, &options)
 }

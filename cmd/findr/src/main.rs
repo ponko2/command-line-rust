@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{ArgAction, Parser};
 use findr::{EntryType, Options};
 use regex::Regex;
-use std::io::{self, BufWriter, Write};
+use std::io::{self, BufWriter};
 
 #[derive(Debug, Parser)]
 #[command(version, about)]
@@ -68,7 +68,5 @@ fn run(args: Args) -> Result<()> {
     let stdout = io::stdout();
     let mut writer = BufWriter::new(stdout.lock());
     let options = args.into();
-    findr::run(&mut writer, &options)?;
-    writer.flush()?;
-    Ok(())
+    findr::run(&mut writer, &options)
 }
