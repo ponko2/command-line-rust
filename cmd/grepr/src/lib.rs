@@ -92,7 +92,7 @@ fn find_files(paths: &[String], recursive: bool) -> Vec<Result<String>> {
 
     for path in paths {
         match path.as_str() {
-            "-" => results.push(Ok(path.to_string())),
+            "-" => results.push(Ok(path.clone())),
             _ => match fs::metadata(path) {
                 Ok(metadata) => {
                     if metadata.is_dir() {
