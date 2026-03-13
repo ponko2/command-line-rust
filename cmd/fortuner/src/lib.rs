@@ -38,29 +38,26 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let files = find_files(&options.sources)?;
     let fortunes = read_fortunes(&files)?;
 
-    match pattern {
-        Some(pattern) => {
-            let mut prev_source = None;
-            for fortune in fortunes
-                .iter()
-                .filter(|fortune| pattern.is_match(&fortune.text))
-            {
-                if prev_source != Some(&fortune.source) {
-                    eprintln!("({})\n%", fortune.source);
-                    prev_source = Some(&fortune.source);
-                }
-                writeln!(writer, "{}\n%", fortune.text)?;
+    if let Some(pattern) = pattern {
+        let mut prev_source = None;
+        for fortune in fortunes
+            .iter()
+            .filter(|fortune| pattern.is_match(&fortune.text))
+        {
+            if prev_source != Some(&fortune.source) {
+                eprintln!("({})\n%", fortune.source);
+                prev_source = Some(&fortune.source);
             }
+            writeln!(writer, "{}\n%", fortune.text)?;
         }
-        _ => {
-            writeln!(
-                writer,
-                "{}",
-                pick_fortune(&fortunes, options.seed)
-                    .or_else(|| Some("No fortunes found".to_string()))
-                    .unwrap()
-            )?;
-        }
+    } else {
+        writeln!(
+            writer,
+            "{}",
+            pick_fortune(&fortunes, options.seed)
+                .or_else(|| Some("No fortunes found".to_string()))
+                .unwrap()
+        )?;
     }
 
     Ok(())
@@ -71,16 +68,17 @@ fn find_files(paths: &[String]) -> Result<Vec<PathBuf>> {
     let mut files = vec![];
 
     for path in paths {
-        match fs::metadata(path) {
-            Err(err) => bail!("{path}: {err}"),
-            Ok(_) => files.extend(
-                WalkDir::new(path)
-                    .into_iter()
-                    .filter_map(Result::ok)
-                    .filter(|e| e.file_type().is_file() && e.path().extension() != Some(dat))
-                    .map(|e| e.path().into()),
-            ),
+        if let Err(err) = fs::metadata(path) {
+            bail!("{path}: {err}");
         }
+
+        files.extend(
+            WalkDir::new(path)
+                .into_iter()
+                .filter_map(Result::ok)
+                .filter(|e| e.file_type().is_file() && e.path().extension() != Some(dat))
+                .map(|e| e.path().into()),
+        )
     }
 
     files.sort();

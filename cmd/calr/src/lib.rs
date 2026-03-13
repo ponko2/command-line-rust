@@ -69,33 +69,30 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 }
 
 fn parse_month(month: &str) -> Result<u32> {
-    match month.parse() {
-        Ok(num) => {
-            if (1..=12).contains(&num) {
-                Ok(num)
-            } else {
-                bail!(r#"month "{month}" not in the range 1 through 12"#)
-            }
+    if let Ok(num) = month.parse() {
+        if (1..=12).contains(&num) {
+            Ok(num)
+        } else {
+            bail!(r#"month "{month}" not in the range 1 through 12"#)
         }
-        _ => {
-            let lower = &month.to_lowercase();
-            let matches: Vec<_> = MONTH_NAMES
-                .iter()
-                .enumerate()
-                .filter_map(|(i, name)| {
-                    if name.to_lowercase().starts_with(lower) {
-                        Some(i + 1)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
+    } else {
+        let lower = &month.to_lowercase();
+        let matches: Vec<_> = MONTH_NAMES
+            .iter()
+            .enumerate()
+            .filter_map(|(i, name)| {
+                if name.to_lowercase().starts_with(lower) {
+                    Some(i + 1)
+                } else {
+                    None
+                }
+            })
+            .collect();
 
-            if matches.len() == 1 {
-                Ok(matches[0] as u32)
-            } else {
-                bail!(r#"Invalid month "{month}""#)
-            }
+        if matches.len() == 1 {
+            Ok(matches[0] as u32)
+        } else {
+            bail!(r#"Invalid month "{month}""#)
         }
     }
 }
