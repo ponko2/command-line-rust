@@ -89,7 +89,7 @@ fn format_field(value: usize, show: bool) -> String {
     if show {
         format!("{value:>8}")
     } else {
-        "".to_string()
+        String::new()
     }
 }
 
