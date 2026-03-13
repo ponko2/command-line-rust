@@ -22,16 +22,6 @@ struct FileInfo {
 }
 
 pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
-    let mut options = options.clone();
-    if [options.words, options.bytes, options.chars, options.lines]
-        .iter()
-        .all(|v| v == &false)
-    {
-        options.lines = true;
-        options.words = true;
-        options.bytes = true;
-    }
-
     let mut total_lines = 0;
     let mut total_words = 0;
     let mut total_bytes = 0;

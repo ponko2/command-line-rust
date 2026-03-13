@@ -30,12 +30,16 @@ struct Args {
 
 impl From<Args> for Options {
     fn from(args: Args) -> Self {
+        let (lines, words, bytes, chars) = match (args.lines, args.words, args.bytes, args.chars) {
+            (false, false, false, false) => (true, true, true, false),
+            (lines, words, bytes, chars) => (lines, words, bytes, chars),
+        };
         Self {
             files: args.files,
-            lines: args.lines,
-            words: args.words,
-            bytes: args.bytes,
-            chars: args.chars,
+            lines,
+            words,
+            bytes,
+            chars,
         }
     }
 }
