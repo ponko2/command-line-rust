@@ -151,12 +151,13 @@ fn parse_pos(range: &str) -> Result<PositionList> {
         .collect::<Result<_, _>>()
 }
 
-fn extract_fields<'a>(record: &'a StringRecord, field_pos: &[Range<usize>]) -> Vec<&'a str> {
+fn extract_fields<'a>(
+    record: &'a StringRecord,
+    field_pos: &[Range<usize>],
+) -> impl Iterator<Item = &'a str> {
     field_pos
         .iter()
-        .cloned()
-        .flat_map(|range| range.filter_map(|i| record.get(i)))
-        .collect()
+        .flat_map(|range| range.clone().filter_map(|i| record.get(i)))
 }
 
 fn extract_bytes(line: &str, byte_pos: &[Range<usize>]) -> String {
@@ -180,8 +181,10 @@ fn extract_chars(line: &str, char_pos: &[Range<usize>]) -> String {
 
 #[cfg(test)]
 mod unit_tests {
-    use super::{extract_bytes, extract_chars, extract_fields, parse_pos};
+    use super::{extract_bytes, extract_chars, parse_pos};
+    use csv::StringRecord;
     use pretty_assertions::assert_eq;
+    use std::ops::Range;
 
     #[test]
     fn test_parse_pos() {
@@ -305,6 +308,12 @@ mod unit_tests {
     #[test]
     fn test_extract_fields() {
         let rec = vec!["Captain", "Sham", "12345"].into();
+        fn extract_fields<'a>(
+            record: &'a StringRecord,
+            field_pos: &[Range<usize>],
+        ) -> Vec<&'a str> {
+            super::extract_fields(record, field_pos).collect()
+        }
         assert_eq!(extract_fields(&rec, &[0..1]), &["Captain"]);
         assert_eq!(extract_fields(&rec, &[1..2]), &["Sham"]);
         assert_eq!(extract_fields(&rec, &[0..1, 2..3]), &["Captain", "12345"]);
