@@ -13,25 +13,24 @@ pub struct Options {
 
 pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     for filename in &options.files {
-        match open(filename) {
-            Err(err) => eprintln!("{filename}: {err}"),
-            Ok(file) => {
-                let mut prev_num = 0;
-                for (line_num, line_result) in file.lines().enumerate() {
-                    let line = line_result?;
-                    if options.number_lines {
-                        writeln!(writer, "{:6}\t{line}", line_num + 1)?;
-                    } else if options.number_nonblank_lines {
-                        if line.is_empty() {
-                            writeln!(writer)?;
-                        } else {
-                            prev_num += 1;
-                            writeln!(writer, "{prev_num:6}\t{line}")?;
-                        }
-                    } else {
-                        writeln!(writer, "{line}")?;
-                    }
+        let Ok(file) = open(filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+            continue;
+        };
+
+        let mut prev_num = 0;
+        for (line_num, line_result) in file.lines().enumerate() {
+            let line = line_result?;
+            if options.number_lines {
+                writeln!(writer, "{:6}\t{line}", line_num + 1)?;
+            } else if options.number_nonblank_lines {
+                if line.is_empty() {
+                    writeln!(writer)?;
+                } else {
+                    prev_num += 1;
+                    writeln!(writer, "{prev_num:6}\t{line}")?;
                 }
+            } else {
+                writeln!(writer, "{line}")?;
             }
         }
     }
@@ -41,7 +40,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        "-" => Ok(Box::new(BufReader::new(io::stdin().lock()))),
         _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
     }
 }

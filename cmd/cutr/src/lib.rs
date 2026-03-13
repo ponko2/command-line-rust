@@ -6,7 +6,10 @@ use std::{
     io::{self, BufRead, BufReader, Write},
     num::NonZeroUsize,
     ops::Range,
+    sync::LazyLock,
 };
+
+static RANGE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)-(\d+)$").unwrap());
 
 #[derive(Debug)]
 pub struct Options {
@@ -67,34 +70,35 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     };
 
     for filename in &options.files {
-        match open(filename) {
-            Err(err) => eprintln!("{filename}: {err}"),
-            Ok(file) => match &extract {
-                Extract::Fields(field_pos) => {
-                    let mut reader = ReaderBuilder::new()
-                        .delimiter(delimiter)
-                        .has_headers(false)
-                        .from_reader(file);
+        let Ok(file) = open(filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+            continue;
+        };
 
-                    let mut wtr = WriterBuilder::new()
-                        .delimiter(delimiter)
-                        .from_writer(io::stdout());
+        match &extract {
+            Extract::Fields(field_pos) => {
+                let mut reader = ReaderBuilder::new()
+                    .delimiter(delimiter)
+                    .has_headers(false)
+                    .from_reader(file);
 
-                    for record in reader.records() {
-                        wtr.write_record(extract_fields(&record?, field_pos))?;
-                    }
+                let mut wtr = WriterBuilder::new()
+                    .delimiter(delimiter)
+                    .from_writer(&mut *writer);
+
+                for record in reader.records() {
+                    wtr.write_record(extract_fields(&record?, field_pos))?;
                 }
-                Extract::Bytes(byte_pos) => {
-                    for line in file.lines() {
-                        writeln!(writer, "{}", extract_bytes(&line?, byte_pos))?;
-                    }
+            }
+            Extract::Bytes(byte_pos) => {
+                for line in file.lines() {
+                    writeln!(writer, "{}", extract_bytes(&line?, byte_pos))?;
                 }
-                Extract::Chars(char_pos) => {
-                    for line in file.lines() {
-                        writeln!(writer, "{}", extract_chars(&line?, char_pos))?;
-                    }
+            }
+            Extract::Chars(char_pos) => {
+                for line in file.lines() {
+                    writeln!(writer, "{}", extract_chars(&line?, char_pos))?;
                 }
-            },
+            }
         }
     }
 
@@ -103,7 +107,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        "-" => Ok(Box::new(BufReader::new(io::stdin().lock()))),
         _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
     }
 }
@@ -126,12 +130,11 @@ fn parse_index(input: &str) -> Result<usize> {
 }
 
 fn parse_pos(range: &str) -> Result<PositionList> {
-    let range_re = Regex::new(r"^(\d+)-(\d+)$").unwrap();
     range
         .split(',')
         .map(|val| {
             parse_index(val).map(|n| n..n + 1).or_else(|e| {
-                range_re.captures(val).ok_or(e).and_then(|captures| {
+                RANGE_RE.captures(val).ok_or(e).and_then(|captures| {
                     let n1 = parse_index(&captures[1])?;
                     let n2 = parse_index(&captures[2])?;
                     if n1 >= n2 {
@@ -148,12 +151,13 @@ fn parse_pos(range: &str) -> Result<PositionList> {
         .collect::<Result<_, _>>()
 }
 
-fn extract_fields<'a>(record: &'a StringRecord, field_pos: &[Range<usize>]) -> Vec<&'a str> {
+fn extract_fields<'a>(
+    record: &'a StringRecord,
+    field_pos: &[Range<usize>],
+) -> impl Iterator<Item = &'a str> {
     field_pos
         .iter()
-        .cloned()
-        .flat_map(|range| range.filter_map(|i| record.get(i)))
-        .collect()
+        .flat_map(|range| range.clone().filter_map(|i| record.get(i)))
 }
 
 fn extract_bytes(line: &str, byte_pos: &[Range<usize>]) -> String {
@@ -177,9 +181,10 @@ fn extract_chars(line: &str, char_pos: &[Range<usize>]) -> String {
 
 #[cfg(test)]
 mod unit_tests {
-    use super::{extract_bytes, extract_chars, extract_fields, parse_pos};
+    use super::{extract_bytes, extract_chars, parse_pos};
     use csv::StringRecord;
     use pretty_assertions::assert_eq;
+    use std::ops::Range;
 
     #[test]
     fn test_parse_pos() {
@@ -302,7 +307,13 @@ mod unit_tests {
     #[allow(clippy::single_range_in_vec_init)]
     #[test]
     fn test_extract_fields() {
-        let rec = StringRecord::from(vec!["Captain", "Sham", "12345"]);
+        let rec = vec!["Captain", "Sham", "12345"].into();
+        fn extract_fields<'a>(
+            record: &'a StringRecord,
+            field_pos: &[Range<usize>],
+        ) -> Vec<&'a str> {
+            super::extract_fields(record, field_pos).collect()
+        }
         assert_eq!(extract_fields(&rec, &[0..1]), &["Captain"]);
         assert_eq!(extract_fields(&rec, &[1..2]), &["Sham"]);
         assert_eq!(extract_fields(&rec, &[0..1, 2..3]), &["Captain", "12345"]);

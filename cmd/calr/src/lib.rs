@@ -1,5 +1,5 @@
 use anyhow::{Result, bail};
-use chrono::{Datelike, Local, NaiveDate};
+use chrono::{Datelike, Duration, Local, NaiveDate};
 use itertools::izip;
 use owo_colors::OwoColorize;
 use std::io::Write;
@@ -69,33 +69,30 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 }
 
 fn parse_month(month: &str) -> Result<u32> {
-    match month.parse() {
-        Ok(num) => {
-            if (1..=12).contains(&num) {
-                Ok(num)
-            } else {
-                bail!(r#"month "{month}" not in the range 1 through 12"#)
-            }
+    if let Ok(num) = month.parse() {
+        if (1..=12).contains(&num) {
+            Ok(num)
+        } else {
+            bail!(r#"month "{month}" not in the range 1 through 12"#)
         }
-        _ => {
-            let lower = &month.to_lowercase();
-            let matches: Vec<_> = MONTH_NAMES
-                .iter()
-                .enumerate()
-                .filter_map(|(i, name)| {
-                    if name.to_lowercase().starts_with(lower) {
-                        Some(i + 1)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
+    } else {
+        let lower = &month.to_ascii_lowercase();
+        let matches: Vec<_> = MONTH_NAMES
+            .iter()
+            .enumerate()
+            .filter_map(|(i, name)| {
+                if name.to_ascii_lowercase().starts_with(lower) {
+                    Some(i + 1)
+                } else {
+                    None
+                }
+            })
+            .collect();
 
-            if matches.len() == 1 {
-                Ok(matches[0] as u32)
-            } else {
-                bail!(r#"Invalid month "{month}""#)
-            }
+        if matches.len() == 1 {
+            Ok(matches[0] as u32)
+        } else {
+            bail!(r#"Invalid month "{month}""#)
         }
     }
 }
@@ -109,10 +106,7 @@ fn last_day_in_month(year: i32, month: u32) -> NaiveDate {
     };
 
     // ...is preceded by the last day of the original month
-    NaiveDate::from_ymd_opt(y, m, 1)
-        .unwrap()
-        .pred_opt()
-        .unwrap()
+    NaiveDate::from_ymd_opt(y, m, 1).unwrap() - Duration::days(1)
 }
 
 fn format_month(year: i32, month: u32, print_year: bool, today: NaiveDate) -> Vec<String> {

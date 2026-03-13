@@ -31,16 +31,8 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
         bail!(r#"Both input files cannot be STDIN ("-")"#);
     }
 
-    let case = |line: String| {
-        if options.insensitive {
-            line.to_lowercase()
-        } else {
-            line
-        }
-    };
-
-    let mut lines1 = open(file1)?.lines().map_while(Result::ok).map(case);
-    let mut lines2 = open(file2)?.lines().map_while(Result::ok).map(case);
+    let mut lines1 = open(file1)?.lines();
+    let mut lines2 = open(file2)?.lines();
 
     let mut print = |col: Column| -> Result<()> {
         let mut columns = vec![];
@@ -78,35 +70,43 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
         Ok(())
     };
 
-    let mut line1 = lines1.next();
-    let mut line2 = lines2.next();
+    let mut line1 = lines1.next().transpose()?;
+    let mut line2 = lines2.next().transpose()?;
+
+    let cmp = |a: &str, b: &str| {
+        if options.insensitive {
+            a.to_lowercase().cmp(&b.to_lowercase())
+        } else {
+            a.cmp(b)
+        }
+    };
 
     while line1.is_some() || line2.is_some() {
         match (&line1, &line2) {
-            (Some(val1), Some(val2)) => match val1.cmp(val2) {
+            (Some(val1), Some(val2)) => match cmp(val1, val2) {
                 Equal => {
                     print(Col3(val1))?;
-                    line1 = lines1.next();
-                    line2 = lines2.next();
+                    line1 = lines1.next().transpose()?;
+                    line2 = lines2.next().transpose()?;
                 }
                 Less => {
                     print(Col1(val1))?;
-                    line1 = lines1.next();
+                    line1 = lines1.next().transpose()?;
                 }
                 Greater => {
                     print(Col2(val2))?;
-                    line2 = lines2.next();
+                    line2 = lines2.next().transpose()?;
                 }
             },
             (Some(val1), None) => {
                 print(Col1(val1))?;
-                line1 = lines1.next();
+                line1 = lines1.next().transpose()?;
             }
             (None, Some(val2)) => {
                 print(Col2(val2))?;
-                line2 = lines2.next();
+                line2 = lines2.next().transpose()?;
             }
-            _ => (),
+            _ => {}
         }
     }
 
@@ -115,7 +115,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        "-" => Ok(Box::new(BufReader::new(io::stdin().lock()))),
         _ => Ok(Box::new(BufReader::new(
             File::open(filename).map_err(|err| anyhow!("{filename}: {err}"))?,
         ))),

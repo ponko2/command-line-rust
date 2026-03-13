@@ -22,46 +22,35 @@ struct FileInfo {
 }
 
 pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
-    let mut options = options.clone();
-    if [options.words, options.bytes, options.chars, options.lines]
-        .iter()
-        .all(|v| v == &false)
-    {
-        options.lines = true;
-        options.words = true;
-        options.bytes = true;
-    }
-
     let mut total_lines = 0;
     let mut total_words = 0;
     let mut total_bytes = 0;
     let mut total_chars = 0;
 
     for filename in &options.files {
-        match open(filename) {
-            Err(err) => eprintln!("{filename}: {err}"),
-            Ok(file) => {
-                if let Ok(info) = count(file) {
-                    writeln!(
-                        writer,
-                        "{}{}{}{}{}",
-                        format_field(info.num_lines, options.lines),
-                        format_field(info.num_words, options.words),
-                        format_field(info.num_bytes, options.bytes),
-                        format_field(info.num_chars, options.chars),
-                        if filename == "-" {
-                            "".to_string()
-                        } else {
-                            format!(" {filename}")
-                        },
-                    )?;
+        let Ok(file) = open(filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+            continue;
+        };
 
-                    total_lines += info.num_lines;
-                    total_words += info.num_words;
-                    total_bytes += info.num_bytes;
-                    total_chars += info.num_chars;
-                }
-            }
+        if let Ok(info) = count(file) {
+            writeln!(
+                writer,
+                "{}{}{}{}{}",
+                format_field(info.num_lines, options.lines),
+                format_field(info.num_words, options.words),
+                format_field(info.num_bytes, options.bytes),
+                format_field(info.num_chars, options.chars),
+                if filename == "-" {
+                    "".to_string()
+                } else {
+                    format!(" {filename}")
+                },
+            )?;
+
+            total_lines += info.num_lines;
+            total_words += info.num_words;
+            total_bytes += info.num_bytes;
+            total_chars += info.num_chars;
         }
     }
 
@@ -81,7 +70,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        "-" => Ok(Box::new(BufReader::new(io::stdin().lock()))),
         _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
     }
 }
@@ -90,7 +79,7 @@ fn format_field(value: usize, show: bool) -> String {
     if show {
         format!("{value:>8}")
     } else {
-        "".to_string()
+        String::new()
     }
 }
 

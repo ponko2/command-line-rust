@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use grepr::Options;
-use std::io::{self, BufWriter, Write};
+use std::io::{self, BufWriter};
 
 #[derive(Debug, Parser)]
 #[command(version, about)]
@@ -45,9 +45,11 @@ impl From<Args> for Options {
     }
 }
 
-fn main() {
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
     let Err(err) = run(Args::parse()) else {
-        return;
+        return ExitCode::SUCCESS;
     };
 
     // Handle broken pipe gracefully
@@ -55,18 +57,16 @@ fn main() {
         .downcast_ref::<io::Error>()
         .is_some_and(|err| err.kind() == io::ErrorKind::BrokenPipe)
     {
-        return;
+        return ExitCode::SUCCESS;
     }
 
     eprintln!("{err}");
-    std::process::exit(1);
+    ExitCode::FAILURE
 }
 
 fn run(args: Args) -> Result<()> {
     let stdout = io::stdout();
     let mut writer = BufWriter::new(stdout.lock());
     let options = args.into();
-    grepr::run(&mut writer, &options)?;
-    writer.flush()?;
-    Ok(())
+    grepr::run(&mut writer, &options)
 }

@@ -9,7 +9,6 @@ version.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 num.workspace = true
-once_cell.workspace = true
 regex.workspace = true
 
 [dev-dependencies]

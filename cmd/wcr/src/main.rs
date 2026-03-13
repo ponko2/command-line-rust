@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use std::io::{self, BufWriter, Write};
+use std::io::{self, BufWriter};
 use wcr::Options;
 
 #[derive(Debug, Parser)]
@@ -30,19 +30,25 @@ struct Args {
 
 impl From<Args> for Options {
     fn from(args: Args) -> Self {
+        let (lines, words, bytes, chars) = match (args.lines, args.words, args.bytes, args.chars) {
+            (false, false, false, false) => (true, true, true, false),
+            (lines, words, bytes, chars) => (lines, words, bytes, chars),
+        };
         Self {
             files: args.files,
-            lines: args.lines,
-            words: args.words,
-            bytes: args.bytes,
-            chars: args.chars,
+            lines,
+            words,
+            bytes,
+            chars,
         }
     }
 }
 
-fn main() {
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
     let Err(err) = run(Args::parse()) else {
-        return;
+        return ExitCode::SUCCESS;
     };
 
     // Handle broken pipe gracefully
@@ -50,18 +56,16 @@ fn main() {
         .downcast_ref::<io::Error>()
         .is_some_and(|err| err.kind() == io::ErrorKind::BrokenPipe)
     {
-        return;
+        return ExitCode::SUCCESS;
     }
 
     eprintln!("{err}");
-    std::process::exit(1);
+    ExitCode::FAILURE
 }
 
 fn run(args: Args) -> Result<()> {
     let stdout = io::stdout();
     let mut writer = BufWriter::new(stdout.lock());
     let options = args.into();
-    wcr::run(&mut writer, &options)?;
-    writer.flush()?;
-    Ok(())
+    wcr::run(&mut writer, &options)
 }

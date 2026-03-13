@@ -1,5 +1,5 @@
 use anyhow::{Result, anyhow, bail};
-use rand::{Rng, SeedableRng, prelude::IndexedRandom, rngs::StdRng};
+use rand::{SeedableRng, prelude::IndexedRandom, rngs::StdRng};
 use regex::RegexBuilder;
 use std::{
     ffi::OsStr,
@@ -27,7 +27,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let pattern = options
         .pattern
         .as_deref()
-        .map(|val: &str| {
+        .map(|val| {
             RegexBuilder::new(val)
                 .case_insensitive(options.insensitive)
                 .build()
@@ -38,29 +38,26 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let files = find_files(&options.sources)?;
     let fortunes = read_fortunes(&files)?;
 
-    match pattern {
-        Some(pattern) => {
-            let mut prev_source = None;
-            for fortune in fortunes
-                .iter()
-                .filter(|fortune| pattern.is_match(&fortune.text))
-            {
-                if prev_source != Some(&fortune.source) {
-                    eprintln!("({})\n%", fortune.source);
-                    prev_source = Some(&fortune.source);
-                }
-                writeln!(writer, "{}\n%", fortune.text)?;
-            }
+    let Some(pattern) = pattern else {
+        writeln!(
+            writer,
+            "{}",
+            pick_fortune(&fortunes, options.seed)
+                .unwrap_or_else(|| "No fortunes found".to_string())
+        )?;
+        return Ok(());
+    };
+
+    let mut prev_source = "";
+    for fortune in fortunes
+        .iter()
+        .filter(|fortune| pattern.is_match(&fortune.text))
+    {
+        if prev_source != fortune.source {
+            eprintln!("({})\n%", fortune.source);
+            prev_source = &fortune.source;
         }
-        _ => {
-            writeln!(
-                writer,
-                "{}",
-                pick_fortune(&fortunes, options.seed)
-                    .or_else(|| Some("No fortunes found".to_string()))
-                    .unwrap()
-            )?;
-        }
+        writeln!(writer, "{}\n%", fortune.text)?;
     }
 
     Ok(())
@@ -71,16 +68,17 @@ fn find_files(paths: &[String]) -> Result<Vec<PathBuf>> {
     let mut files = vec![];
 
     for path in paths {
-        match fs::metadata(path) {
-            Err(err) => bail!("{path}: {err}"),
-            Ok(_) => files.extend(
-                WalkDir::new(path)
-                    .into_iter()
-                    .filter_map(Result::ok)
-                    .filter(|e| e.file_type().is_file() && e.path().extension() != Some(dat))
-                    .map(|e| e.path().into()),
-            ),
+        if let Err(err) = fs::metadata(path) {
+            bail!("{path}: {err}");
         }
+
+        files.extend(
+            WalkDir::new(path)
+                .into_iter()
+                .filter_map(Result::ok)
+                .filter(|e| e.file_type().is_file() && e.path().extension() != Some(dat))
+                .map(|e| e.into_path()),
+        )
     }
 
     files.sort();
@@ -94,7 +92,7 @@ fn read_fortunes(paths: &[PathBuf]) -> Result<Vec<Fortune>> {
 
     for path in paths {
         let basename = path.file_name().unwrap().to_string_lossy().into_owned();
-        let file = File::open(path).map_err(|err| anyhow!("{}: {err}", path.to_string_lossy()))?;
+        let file = File::open(path).map_err(|err| anyhow!("{path:?}: {err}"))?;
 
         for line in BufReader::new(file).lines().map_while(Result::ok) {
             if line == "%" {
@@ -106,7 +104,7 @@ fn read_fortunes(paths: &[PathBuf]) -> Result<Vec<Fortune>> {
                     buffer.clear();
                 }
             } else {
-                buffer.push(line.to_string());
+                buffer.push(line);
             }
         }
     }
@@ -115,18 +113,16 @@ fn read_fortunes(paths: &[PathBuf]) -> Result<Vec<Fortune>> {
 }
 
 fn pick_fortune(fortunes: &[Fortune], seed: Option<u64>) -> Option<String> {
-    let mut rng: Box<dyn Rng> = match seed {
-        Some(val) => Box::new(StdRng::seed_from_u64(val)),
-        _ => Box::new(rand::rng()),
-    };
+    let mut rng = seed
+        .map(StdRng::seed_from_u64)
+        .unwrap_or_else(|| StdRng::from_rng(&mut rand::rng()));
 
-    fortunes.choose(&mut rng).map(|f| f.text.to_string())
+    fortunes.choose(&mut rng).map(|f| f.text.clone())
 }
 
 #[cfg(test)]
 mod tests {
     use super::{Fortune, find_files, pick_fortune, read_fortunes};
-    use std::path::PathBuf;
 
     #[test]
     fn test_find_files() {
@@ -177,7 +173,7 @@ mod tests {
     #[test]
     fn test_read_fortunes() {
         // Parses all the fortunes without a filter
-        let res = read_fortunes(&[PathBuf::from("./tests/inputs/jokes")]);
+        let res = read_fortunes(&["./tests/inputs/jokes".into()]);
         assert!(res.is_ok());
 
         if let Ok(fortunes) = res {
@@ -195,8 +191,8 @@ mod tests {
 
         // Filters for matching text
         let res = read_fortunes(&[
-            PathBuf::from("./tests/inputs/jokes"),
-            PathBuf::from("./tests/inputs/quotes"),
+            "./tests/inputs/jokes".into(),
+            "./tests/inputs/quotes".into(),
         ]);
         assert!(res.is_ok());
         assert_eq!(res.unwrap().len(), 11);

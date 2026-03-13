@@ -15,33 +15,33 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let num_files = options.files.len();
 
     for (file_num, filename) in options.files.iter().enumerate() {
-        match open(filename) {
-            Err(err) => eprintln!("{filename}: {err}"),
-            Ok(mut file) => {
-                if num_files > 1 {
-                    writeln!(
-                        writer,
-                        "{}==> {filename} <==",
-                        if file_num > 0 { "\n" } else { "" },
-                    )?;
-                }
+        let Ok(mut file) = open(filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+            continue;
+        };
 
-                if let Some(num_bytes) = options.bytes {
-                    let mut buffer = vec![0; num_bytes as usize];
-                    let bytes_read = file.read(&mut buffer)?;
-                    write!(writer, "{}", String::from_utf8_lossy(&buffer[..bytes_read]))?;
-                } else {
-                    let mut line = String::new();
-                    for _ in 0..options.lines {
-                        let bytes = file.read_line(&mut line)?;
-                        if bytes == 0 {
-                            break;
-                        }
-                        write!(writer, "{line}")?;
-                        line.clear();
-                    }
-                }
+        if num_files > 1 {
+            writeln!(
+                writer,
+                "{}==> {filename} <==",
+                if file_num > 0 { "\n" } else { "" },
+            )?;
+        }
+
+        if let Some(num_bytes) = options.bytes {
+            let mut buffer = vec![0; num_bytes as usize];
+            let bytes_read = file.read(&mut buffer)?;
+            write!(writer, "{}", String::from_utf8_lossy(&buffer[..bytes_read]))?;
+            continue;
+        }
+
+        let mut line = String::new();
+        for _ in 0..options.lines {
+            let bytes = file.read_line(&mut line)?;
+            if bytes == 0 {
+                break;
             }
+            write!(writer, "{line}")?;
+            line.clear();
         }
     }
 
@@ -50,7 +50,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        "-" => Ok(Box::new(BufReader::new(io::stdin().lock()))),
         _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
     }
 }

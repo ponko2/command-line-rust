@@ -46,23 +46,23 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 fn find_files(paths: &[String], show_hidden: bool) -> Result<Vec<PathBuf>> {
     let mut results = vec![];
     for name in paths {
-        match fs::metadata(name) {
-            Err(err) => eprintln!("{name}: {err}"),
-            Ok(meta) => {
-                if meta.is_dir() {
-                    for entry in fs::read_dir(name)? {
-                        let entry = entry?;
-                        let path = entry.path();
-                        let is_hidden = path
-                            .file_name()
-                            .is_some_and(|file_name| file_name.to_string_lossy().starts_with('.'));
-                        if !is_hidden || show_hidden {
-                            results.push(entry.path());
-                        }
-                    }
-                } else {
-                    results.push(PathBuf::from(name));
-                }
+        let Ok(meta) = fs::metadata(name).inspect_err(|err| eprintln!("{name}: {err}")) else {
+            continue;
+        };
+
+        if !meta.is_dir() {
+            results.push(name.into());
+            continue;
+        }
+
+        for entry in fs::read_dir(name)? {
+            let entry = entry?;
+            let path = entry.path();
+            let is_hidden = path
+                .file_name()
+                .is_some_and(|file_name| file_name.to_string_lossy().starts_with('.'));
+            if !is_hidden || show_hidden {
+                results.push(entry.path());
             }
         }
     }
@@ -77,14 +77,16 @@ fn format_output(paths: &[PathBuf]) -> Result<String> {
         let metadata = path.metadata()?;
 
         let uid = metadata.uid();
-        let owner = get_user_by_uid(uid)
-            .map(|u| u.name().to_string_lossy().into_owned())
-            .unwrap_or_else(|| uid.to_string());
+        let owner = get_user_by_uid(uid).map_or_else(
+            || uid.to_string(),
+            |u| u.name().to_string_lossy().into_owned(),
+        );
 
         let gid = metadata.gid();
-        let group = get_group_by_gid(gid)
-            .map(|g| g.name().to_string_lossy().into_owned())
-            .unwrap_or_else(|| gid.to_string());
+        let group = get_group_by_gid(gid).map_or_else(
+            || gid.to_string(),
+            |g| g.name().to_string_lossy().into_owned(),
+        );
 
         file_entries.push(FileEntry {
             file_type: if path.is_dir() { "d" } else { "-" },
@@ -93,7 +95,7 @@ fn format_output(paths: &[PathBuf]) -> Result<String> {
             owner,
             group,
             size: metadata.len(),
-            modified: DateTime::from(metadata.modified()?),
+            modified: metadata.modified()?.into(),
             name: path.display().to_string(),
         });
     }
@@ -142,7 +144,6 @@ fn mk_triple(mode: u32, owner: Owner) -> String {
 mod test {
     use super::{Owner, find_files, format_mode, format_output, mk_triple};
     use pretty_assertions::assert_eq;
-    use std::path::PathBuf;
 
     #[test]
     fn test_find_files() {
@@ -243,9 +244,8 @@ mod test {
     #[test]
     fn test_format_output_one() {
         let bustle_path = "tests/inputs/bustle.txt";
-        let bustle = PathBuf::from(bustle_path);
 
-        let res = format_output(&[bustle]);
+        let res = format_output(&[bustle_path.into()]);
         assert!(res.is_ok());
 
         let out = res.unwrap();
@@ -258,10 +258,7 @@ mod test {
 
     #[test]
     fn test_format_output_two() {
-        let res = format_output(&[
-            PathBuf::from("tests/inputs/dir"),
-            PathBuf::from("tests/inputs/empty.txt"),
-        ]);
+        let res = format_output(&["tests/inputs/dir".into(), "tests/inputs/empty.txt".into()]);
         assert!(res.is_ok());
 
         let out = res.unwrap();
