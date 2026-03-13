@@ -27,7 +27,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let pattern = options
         .pattern
         .as_deref()
-        .map(|val: &str| {
+        .map(|val| {
             RegexBuilder::new(val)
                 .case_insensitive(options.insensitive)
                 .build()
