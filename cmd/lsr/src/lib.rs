@@ -77,14 +77,16 @@ fn format_output(paths: &[PathBuf]) -> Result<String> {
         let metadata = path.metadata()?;
 
         let uid = metadata.uid();
-        let owner = get_user_by_uid(uid)
-            .map(|u| u.name().to_string_lossy().into_owned())
-            .unwrap_or_else(|| uid.to_string());
+        let owner = get_user_by_uid(uid).map_or_else(
+            || uid.to_string(),
+            |u| u.name().to_string_lossy().into_owned(),
+        );
 
         let gid = metadata.gid();
-        let group = get_group_by_gid(gid)
-            .map(|g| g.name().to_string_lossy().into_owned())
-            .unwrap_or_else(|| gid.to_string());
+        let group = get_group_by_gid(gid).map_or_else(
+            || gid.to_string(),
+            |g| g.name().to_string_lossy().into_owned(),
+        );
 
         file_entries.push(FileEntry {
             file_type: if path.is_dir() { "d" } else { "-" },
