@@ -6,7 +6,10 @@ use std::{
     io::{self, BufRead, BufReader, Write},
     num::NonZeroUsize,
     ops::Range,
+    sync::LazyLock,
 };
+
+static RANGE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)-(\d+)$").unwrap());
 
 #[derive(Debug)]
 pub struct Options {
@@ -126,12 +129,11 @@ fn parse_index(input: &str) -> Result<usize> {
 }
 
 fn parse_pos(range: &str) -> Result<PositionList> {
-    let range_re = Regex::new(r"^(\d+)-(\d+)$").unwrap();
     range
         .split(',')
         .map(|val| {
             parse_index(val).map(|n| n..n + 1).or_else(|e| {
-                range_re.captures(val).ok_or(e).and_then(|captures| {
+                RANGE_RE.captures(val).ok_or(e).and_then(|captures| {
                     let n1 = parse_index(&captures[1])?;
                     let n2 = parse_index(&captures[2])?;
                     if n1 >= n2 {
