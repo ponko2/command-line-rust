@@ -83,7 +83,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
                 let mut wtr = WriterBuilder::new()
                     .delimiter(delimiter)
-                    .from_writer(io::stdout());
+                    .from_writer(&mut *writer);
 
                 for record in reader.records() {
                     wtr.write_record(extract_fields(&record?, field_pos))?;
