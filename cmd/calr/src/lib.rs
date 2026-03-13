@@ -76,12 +76,12 @@ fn parse_month(month: &str) -> Result<u32> {
             bail!(r#"month "{month}" not in the range 1 through 12"#)
         }
     } else {
-        let lower = &month.to_lowercase();
+        let lower = &month.to_ascii_lowercase();
         let matches: Vec<_> = MONTH_NAMES
             .iter()
             .enumerate()
             .filter_map(|(i, name)| {
-                if name.to_lowercase().starts_with(lower) {
+                if name.to_ascii_lowercase().starts_with(lower) {
                     Some(i + 1)
                 } else {
                     None
