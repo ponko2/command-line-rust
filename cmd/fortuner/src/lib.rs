@@ -43,8 +43,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
             writer,
             "{}",
             pick_fortune(&fortunes, options.seed)
-                .or_else(|| Some("No fortunes found".to_string()))
-                .unwrap()
+                .unwrap_or_else(|| "No fortunes found".to_string())
         )?;
         return Ok(());
     };
