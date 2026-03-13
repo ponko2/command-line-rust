@@ -77,7 +77,7 @@ fn find_files(paths: &[String]) -> Result<Vec<PathBuf>> {
                 .into_iter()
                 .filter_map(Result::ok)
                 .filter(|e| e.file_type().is_file() && e.path().extension() != Some(dat))
-                .map(|e| e.path().into()),
+                .map(|e| e.into_path()),
         )
     }
 
