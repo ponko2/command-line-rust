@@ -124,7 +124,6 @@ fn pick_fortune(fortunes: &[Fortune], seed: Option<u64>) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{Fortune, find_files, pick_fortune, read_fortunes};
-    use std::path::PathBuf;
 
     #[test]
     fn test_find_files() {
@@ -175,7 +174,7 @@ mod tests {
     #[test]
     fn test_read_fortunes() {
         // Parses all the fortunes without a filter
-        let res = read_fortunes(&[PathBuf::from("./tests/inputs/jokes")]);
+        let res = read_fortunes(&["./tests/inputs/jokes".into()]);
         assert!(res.is_ok());
 
         if let Ok(fortunes) = res {
@@ -193,8 +192,8 @@ mod tests {
 
         // Filters for matching text
         let res = read_fortunes(&[
-            PathBuf::from("./tests/inputs/jokes"),
-            PathBuf::from("./tests/inputs/quotes"),
+            "./tests/inputs/jokes".into(),
+            "./tests/inputs/quotes".into(),
         ]);
         assert!(res.is_ok());
         assert_eq!(res.unwrap().len(), 11);

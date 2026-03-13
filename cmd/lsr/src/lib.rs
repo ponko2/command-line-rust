@@ -51,7 +51,7 @@ fn find_files(paths: &[String], show_hidden: bool) -> Result<Vec<PathBuf>> {
         };
 
         if !meta.is_dir() {
-            results.push(PathBuf::from(name));
+            results.push(name.into());
             continue;
         }
 
@@ -95,7 +95,7 @@ fn format_output(paths: &[PathBuf]) -> Result<String> {
             owner,
             group,
             size: metadata.len(),
-            modified: DateTime::from(metadata.modified()?),
+            modified: metadata.modified()?.into(),
             name: path.display().to_string(),
         });
     }
@@ -144,7 +144,6 @@ fn mk_triple(mode: u32, owner: Owner) -> String {
 mod test {
     use super::{Owner, find_files, format_mode, format_output, mk_triple};
     use pretty_assertions::assert_eq;
-    use std::path::PathBuf;
 
     #[test]
     fn test_find_files() {
@@ -245,9 +244,8 @@ mod test {
     #[test]
     fn test_format_output_one() {
         let bustle_path = "tests/inputs/bustle.txt";
-        let bustle = PathBuf::from(bustle_path);
 
-        let res = format_output(&[bustle]);
+        let res = format_output(&[bustle_path.into()]);
         assert!(res.is_ok());
 
         let out = res.unwrap();
@@ -260,10 +258,7 @@ mod test {
 
     #[test]
     fn test_format_output_two() {
-        let res = format_output(&[
-            PathBuf::from("tests/inputs/dir"),
-            PathBuf::from("tests/inputs/empty.txt"),
-        ]);
+        let res = format_output(&["tests/inputs/dir".into(), "tests/inputs/empty.txt".into()]);
         assert!(res.is_ok());
 
         let out = res.unwrap();

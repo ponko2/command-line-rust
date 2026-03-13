@@ -181,7 +181,6 @@ fn extract_chars(line: &str, char_pos: &[Range<usize>]) -> String {
 #[cfg(test)]
 mod unit_tests {
     use super::{extract_bytes, extract_chars, extract_fields, parse_pos};
-    use csv::StringRecord;
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -305,7 +304,7 @@ mod unit_tests {
     #[allow(clippy::single_range_in_vec_init)]
     #[test]
     fn test_extract_fields() {
-        let rec = StringRecord::from(vec!["Captain", "Sham", "12345"]);
+        let rec = vec!["Captain", "Sham", "12345"].into();
         assert_eq!(extract_fields(&rec, &[0..1]), &["Captain"]);
         assert_eq!(extract_fields(&rec, &[1..2]), &["Sham"]);
         assert_eq!(extract_fields(&rec, &[0..1, 2..3]), &["Captain", "12345"]);
