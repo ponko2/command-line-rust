@@ -48,14 +48,14 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
         return Ok(());
     };
 
-    let mut prev_source = None;
+    let mut prev_source = "";
     for fortune in fortunes
         .iter()
         .filter(|fortune| pattern.is_match(&fortune.text))
     {
-        if prev_source != Some(&fortune.source) {
+        if prev_source != fortune.source {
             eprintln!("({})\n%", fortune.source);
-            prev_source = Some(&fortune.source);
+            prev_source = &fortune.source;
         }
         writeln!(writer, "{}\n%", fortune.text)?;
     }
