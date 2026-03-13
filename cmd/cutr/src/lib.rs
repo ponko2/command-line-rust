@@ -107,7 +107,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        "-" => Ok(Box::new(BufReader::new(io::stdin().lock()))),
         _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
     }
 }
