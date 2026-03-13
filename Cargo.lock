@@ -1023,7 +1023,6 @@ dependencies = [
  "assert_cmd",
  "clap",
  "num",
- "once_cell",
  "predicates",
  "pretty_assertions",
  "rand",
