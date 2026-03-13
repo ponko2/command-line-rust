@@ -1,5 +1,5 @@
 use anyhow::{Result, bail};
-use chrono::{Datelike, Local, NaiveDate};
+use chrono::{Datelike, Duration, Local, NaiveDate};
 use itertools::izip;
 use owo_colors::OwoColorize;
 use std::io::Write;
@@ -106,10 +106,7 @@ fn last_day_in_month(year: i32, month: u32) -> NaiveDate {
     };
 
     // ...is preceded by the last day of the original month
-    NaiveDate::from_ymd_opt(y, m, 1)
-        .unwrap()
-        .pred_opt()
-        .unwrap()
+    NaiveDate::from_ymd_opt(y, m, 1).unwrap() - Duration::days(1)
 }
 
 fn format_month(year: i32, month: u32, print_year: bool, today: NaiveDate) -> Vec<String> {
