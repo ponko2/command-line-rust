@@ -144,7 +144,7 @@ fn get_start_index(take_val: &TakeValue, total: i64) -> Option<u64> {
             }
         }
         TakeNum(num) => {
-            if num == &0 || total == 0 || num > &total {
+            if *num == 0 || total == 0 || num > &total {
                 None
             } else {
                 let start = if num < &0 { total + num } else { num - 1 };
