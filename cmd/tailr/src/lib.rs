@@ -31,25 +31,25 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
     let num_files = options.files.len();
     for (file_num, filename) in options.files.iter().enumerate() {
-        match File::open(filename) {
-            Err(err) => eprintln!("{filename}: {err}"),
-            Ok(file) => {
-                if !options.quiet && num_files > 1 {
-                    writeln!(
-                        writer,
-                        "{}==> {filename} <==",
-                        if file_num > 0 { "\n" } else { "" },
-                    )?;
-                }
+        let Ok(file) = File::open(filename).inspect_err(|err| eprintln!("{filename}: {err}"))
+        else {
+            continue;
+        };
 
-                let (total_lines, total_bytes) = count_lines_bytes(filename)?;
-                let file = BufReader::new(file);
-                if let Some(num_bytes) = &bytes {
-                    print_bytes(writer, file, num_bytes, total_bytes)?;
-                } else {
-                    print_lines(writer, file, &lines, total_lines)?;
-                }
-            }
+        if !options.quiet && num_files > 1 {
+            writeln!(
+                writer,
+                "{}==> {filename} <==",
+                if file_num > 0 { "\n" } else { "" },
+            )?;
+        }
+
+        let (total_lines, total_bytes) = count_lines_bytes(filename)?;
+        let file = BufReader::new(file);
+        if let Some(num_bytes) = &bytes {
+            print_bytes(writer, file, num_bytes, total_bytes)?;
+        } else {
+            print_lines(writer, file, &lines, total_lines)?;
         }
     }
 

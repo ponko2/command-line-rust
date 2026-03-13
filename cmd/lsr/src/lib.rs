@@ -46,23 +46,23 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 fn find_files(paths: &[String], show_hidden: bool) -> Result<Vec<PathBuf>> {
     let mut results = vec![];
     for name in paths {
-        match fs::metadata(name) {
-            Err(err) => eprintln!("{name}: {err}"),
-            Ok(meta) => {
-                if meta.is_dir() {
-                    for entry in fs::read_dir(name)? {
-                        let entry = entry?;
-                        let path = entry.path();
-                        let is_hidden = path
-                            .file_name()
-                            .is_some_and(|file_name| file_name.to_string_lossy().starts_with('.'));
-                        if !is_hidden || show_hidden {
-                            results.push(entry.path());
-                        }
-                    }
-                } else {
-                    results.push(PathBuf::from(name));
-                }
+        let Ok(meta) = fs::metadata(name).inspect_err(|err| eprintln!("{name}: {err}")) else {
+            continue;
+        };
+
+        if !meta.is_dir() {
+            results.push(PathBuf::from(name));
+            continue;
+        }
+
+        for entry in fs::read_dir(name)? {
+            let entry = entry?;
+            let path = entry.path();
+            let is_hidden = path
+                .file_name()
+                .is_some_and(|file_name| file_name.to_string_lossy().starts_with('.'));
+            if !is_hidden || show_hidden {
+                results.push(entry.path());
             }
         }
     }

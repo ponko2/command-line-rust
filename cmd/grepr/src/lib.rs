@@ -35,23 +35,27 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     };
 
     for entry in entries {
-        match entry {
-            Err(err) => eprintln!("{err}"),
-            Ok(filename) => match open(&filename) {
-                Err(err) => eprintln!("{filename}: {err}"),
-                Ok(file) => match find_lines(file, &pattern, options.invert) {
-                    Err(err) => eprintln!("{err}"),
-                    Ok(matches) => {
-                        if options.count {
-                            print(&filename, &format!("{}\n", matches.len()))?;
-                        } else {
-                            for line in &matches {
-                                print(&filename, line)?;
-                            }
-                        }
-                    }
-                },
-            },
+        let Ok(filename) = entry.inspect_err(|err| eprintln!("{err}")) else {
+            continue;
+        };
+
+        let Ok(file) = open(&filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+            continue;
+        };
+
+        let Ok(matches) =
+            find_lines(file, &pattern, options.invert).inspect_err(|err| eprintln!("{err}"))
+        else {
+            continue;
+        };
+
+        if options.count {
+            print(&filename, &format!("{}\n", matches.len()))?;
+            continue;
+        }
+
+        for line in &matches {
+            print(&filename, line)?;
         }
     }
 

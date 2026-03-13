@@ -38,30 +38,29 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let mut total_chars = 0;
 
     for filename in &options.files {
-        match open(filename) {
-            Err(err) => eprintln!("{filename}: {err}"),
-            Ok(file) => {
-                if let Ok(info) = count(file) {
-                    writeln!(
-                        writer,
-                        "{}{}{}{}{}",
-                        format_field(info.num_lines, options.lines),
-                        format_field(info.num_words, options.words),
-                        format_field(info.num_bytes, options.bytes),
-                        format_field(info.num_chars, options.chars),
-                        if filename == "-" {
-                            "".to_string()
-                        } else {
-                            format!(" {filename}")
-                        },
-                    )?;
+        let Ok(file) = open(filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+            continue;
+        };
 
-                    total_lines += info.num_lines;
-                    total_words += info.num_words;
-                    total_bytes += info.num_bytes;
-                    total_chars += info.num_chars;
-                }
-            }
+        if let Ok(info) = count(file) {
+            writeln!(
+                writer,
+                "{}{}{}{}{}",
+                format_field(info.num_lines, options.lines),
+                format_field(info.num_words, options.words),
+                format_field(info.num_bytes, options.bytes),
+                format_field(info.num_chars, options.chars),
+                if filename == "-" {
+                    "".to_string()
+                } else {
+                    format!(" {filename}")
+                },
+            )?;
+
+            total_lines += info.num_lines;
+            total_words += info.num_words;
+            total_bytes += info.num_bytes;
+            total_chars += info.num_chars;
         }
     }
 

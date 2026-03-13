@@ -70,34 +70,35 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     };
 
     for filename in &options.files {
-        match open(filename) {
-            Err(err) => eprintln!("{filename}: {err}"),
-            Ok(file) => match &extract {
-                Extract::Fields(field_pos) => {
-                    let mut reader = ReaderBuilder::new()
-                        .delimiter(delimiter)
-                        .has_headers(false)
-                        .from_reader(file);
+        let Ok(file) = open(filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+            continue;
+        };
 
-                    let mut wtr = WriterBuilder::new()
-                        .delimiter(delimiter)
-                        .from_writer(io::stdout());
+        match &extract {
+            Extract::Fields(field_pos) => {
+                let mut reader = ReaderBuilder::new()
+                    .delimiter(delimiter)
+                    .has_headers(false)
+                    .from_reader(file);
 
-                    for record in reader.records() {
-                        wtr.write_record(extract_fields(&record?, field_pos))?;
-                    }
+                let mut wtr = WriterBuilder::new()
+                    .delimiter(delimiter)
+                    .from_writer(io::stdout());
+
+                for record in reader.records() {
+                    wtr.write_record(extract_fields(&record?, field_pos))?;
                 }
-                Extract::Bytes(byte_pos) => {
-                    for line in file.lines() {
-                        writeln!(writer, "{}", extract_bytes(&line?, byte_pos))?;
-                    }
+            }
+            Extract::Bytes(byte_pos) => {
+                for line in file.lines() {
+                    writeln!(writer, "{}", extract_bytes(&line?, byte_pos))?;
                 }
-                Extract::Chars(char_pos) => {
-                    for line in file.lines() {
-                        writeln!(writer, "{}", extract_chars(&line?, char_pos))?;
-                    }
+            }
+            Extract::Chars(char_pos) => {
+                for line in file.lines() {
+                    writeln!(writer, "{}", extract_chars(&line?, char_pos))?;
                 }
-            },
+            }
         }
     }
 
