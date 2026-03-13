@@ -106,7 +106,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
                 print(Col2(val2))?;
                 line2 = lines2.next().transpose()?;
             }
-            _ => (),
+            _ => {}
         }
     }
 
