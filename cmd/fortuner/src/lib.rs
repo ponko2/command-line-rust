@@ -92,7 +92,7 @@ fn read_fortunes(paths: &[PathBuf]) -> Result<Vec<Fortune>> {
 
     for path in paths {
         let basename = path.file_name().unwrap().to_string_lossy().into_owned();
-        let file = File::open(path).map_err(|err| anyhow!("{}: {err}", path.to_string_lossy()))?;
+        let file = File::open(path).map_err(|err| anyhow!("{path:?}: {err}"))?;
 
         for line in BufReader::new(file).lines().map_while(Result::ok) {
             if line == "%" {
