@@ -50,11 +50,11 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
             .into_iter()
             .filter_map(|res| res.inspect_err(|err| eprintln!("{err}")).ok())
             .filter(type_filter)
-            .filter(name_filter)
-            .map(|entry| entry.path().display().to_string())
-            .collect::<Vec<_>>();
+            .filter(name_filter);
 
-        writeln!(writer, "{}", entries.join("\n"))?;
+        for entry in entries {
+            writeln!(writer, "{}", entry.path().display())?;
+        }
     }
 
     Ok(())
