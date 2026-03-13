@@ -38,19 +38,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let files = find_files(&options.sources)?;
     let fortunes = read_fortunes(&files)?;
 
-    if let Some(pattern) = pattern {
-        let mut prev_source = None;
-        for fortune in fortunes
-            .iter()
-            .filter(|fortune| pattern.is_match(&fortune.text))
-        {
-            if prev_source != Some(&fortune.source) {
-                eprintln!("({})\n%", fortune.source);
-                prev_source = Some(&fortune.source);
-            }
-            writeln!(writer, "{}\n%", fortune.text)?;
-        }
-    } else {
+    let Some(pattern) = pattern else {
         writeln!(
             writer,
             "{}",
@@ -58,6 +46,19 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
                 .or_else(|| Some("No fortunes found".to_string()))
                 .unwrap()
         )?;
+        return Ok(());
+    };
+
+    let mut prev_source = None;
+    for fortune in fortunes
+        .iter()
+        .filter(|fortune| pattern.is_match(&fortune.text))
+    {
+        if prev_source != Some(&fortune.source) {
+            eprintln!("({})\n%", fortune.source);
+            prev_source = Some(&fortune.source);
+        }
+        writeln!(writer, "{}\n%", fortune.text)?;
     }
 
     Ok(())

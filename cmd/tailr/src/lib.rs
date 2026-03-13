@@ -63,15 +63,14 @@ fn parse_num(val: &str) -> Result<TakeValue> {
         val.parse().map(i64::wrapping_neg)
     };
 
-    match res {
-        Ok(num) => {
-            if num == 0 && val.starts_with('+') {
-                Ok(PlusZero)
-            } else {
-                Ok(TakeNum(num))
-            }
-        }
-        _ => bail!(val.to_string()),
+    let Ok(num) = res else {
+        bail!(val.to_string());
+    };
+
+    if num == 0 && val.starts_with('+') {
+        Ok(PlusZero)
+    } else {
+        Ok(TakeNum(num))
     }
 }
 
