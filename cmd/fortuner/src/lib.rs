@@ -104,7 +104,7 @@ fn read_fortunes(paths: &[PathBuf]) -> Result<Vec<Fortune>> {
                     buffer.clear();
                 }
             } else {
-                buffer.push(line.to_string());
+                buffer.push(line);
             }
         }
     }
