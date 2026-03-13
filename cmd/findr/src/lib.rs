@@ -48,13 +48,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     for path in &options.paths {
         let entries = WalkDir::new(path)
             .into_iter()
-            .filter_map(|err| match err {
-                Err(err) => {
-                    eprintln!("{err}");
-                    None
-                }
-                Ok(entry) => Some(entry),
-            })
+            .filter_map(|res| res.inspect_err(|err| eprintln!("{err}")).ok())
             .filter(type_filter)
             .filter(name_filter)
             .map(|entry| entry.path().display().to_string())
