@@ -44,6 +44,8 @@
                 file = ./rust-toolchain.toml;
                 sha256 = "qqF33vNuAdU5vua96VKVIwuc43j4EFeEXbjQ6+l4mO4=";
               })
+              cargo-features-manager
+              cargo-machete
               cargo-nextest
               commitlint
               editorconfig-checker

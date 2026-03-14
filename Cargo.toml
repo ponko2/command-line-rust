@@ -3,22 +3,26 @@ resolver = "3"
 members = ["cmd/*"]
 
 [workspace.dependencies]
-anyhow = "1.0.102"
+anyhow = { version = "1.0.102", default-features = false }
 assert_cmd = "2.2.0"
-chrono = "0.4.44"
+chrono = { version = "0.4.44", features = ["clock"], default-features = false }
 clap = { version = "4.5.60", features = ["derive"] }
 csv = "1.4.0"
-itertools = "0.14.0"
-num = "0.4.3"
+itertools = { version = "0.14.0", default-features = false }
+num = { version = "0.4.3", default-features = false }
 owo-colors = "4.3.0"
-predicates = "3.1.4"
+predicates = { version = "3.1.4", features = ["regex"], default-features = false }
 pretty_assertions = "1.4.1"
 rand = "0.10.0"
 regex = "1.12.3"
-sysinfo = "0.38.4"
-tabled = "0.20.0"
-tempfile = "3.27.0"
-uzers = "0.12.2"
+sysinfo = { version = "0.38.4", features = ["system"], default-features = false }
+tabled = { version = "0.20.0", features = [
+  "derive",
+  "macros",
+  "testing_table",
+], default-features = false }
+tempfile = { version = "3.27.0", default-features = false }
+uzers = { version = "0.12.2", default-features = false }
 walkdir = "2.5.0"
 
 [workspace.package]
