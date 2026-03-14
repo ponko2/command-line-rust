@@ -63,10 +63,10 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 }
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
-    match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin().lock()))),
-        _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
+    if filename == "-" {
+        return Ok(Box::new(BufReader::new(io::stdin().lock())));
     }
+    Ok(Box::new(BufReader::new(File::open(filename)?)))
 }
 
 fn find_lines<T: BufRead>(mut file: T, pattern: &Regex, invert: bool) -> Result<Vec<String>> {
@@ -91,29 +91,40 @@ fn find_files(paths: &[String], recursive: bool) -> Vec<Result<String>> {
     let mut results = vec![];
 
     for path in paths {
-        match path.as_str() {
-            "-" => results.push(Ok(path.clone())),
-            _ => match fs::metadata(path) {
-                Ok(metadata) => {
-                    if metadata.is_dir() {
-                        if recursive {
-                            for entry in WalkDir::new(path)
-                                .into_iter()
-                                .flatten()
-                                .filter(|e| e.file_type().is_file())
-                            {
-                                results.push(Ok(entry.path().display().to_string()));
-                            }
-                        } else {
-                            results.push(Err(anyhow!("{path} is a directory")));
-                        }
-                    } else if metadata.is_file() {
-                        results.push(Ok(path.to_string()));
-                    }
-                }
-                Err(err) => results.push(Err(anyhow!("{path}: {err}"))),
-            },
+        if path == "-" {
+            results.push(Ok(path.clone()));
+            continue;
         }
+
+        let metadata = match fs::metadata(path) {
+            Ok(metadata) => metadata,
+            Err(err) => {
+                results.push(Err(anyhow!("{path}: {err}")));
+                continue;
+            }
+        };
+
+        if metadata.is_file() {
+            results.push(Ok(path.to_string()));
+            continue;
+        }
+
+        if !metadata.is_dir() {
+            continue;
+        }
+
+        if !recursive {
+            results.push(Err(anyhow!("{path} is a directory")));
+            continue;
+        }
+
+        results.extend(
+            WalkDir::new(path)
+                .into_iter()
+                .flatten()
+                .filter(|e| e.file_type().is_file())
+                .map(|e| Ok(e.path().display().to_string())),
+        );
     }
 
     results

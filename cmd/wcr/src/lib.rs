@@ -32,26 +32,28 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
             continue;
         };
 
-        if let Ok(info) = count(file) {
-            writeln!(
-                writer,
-                "{}{}{}{}{}",
-                format_field(info.num_lines, options.lines),
-                format_field(info.num_words, options.words),
-                format_field(info.num_bytes, options.bytes),
-                format_field(info.num_chars, options.chars),
-                if filename == "-" {
-                    "".to_string()
-                } else {
-                    format!(" {filename}")
-                },
-            )?;
+        let Ok(info) = count(file) else {
+            continue;
+        };
 
-            total_lines += info.num_lines;
-            total_words += info.num_words;
-            total_bytes += info.num_bytes;
-            total_chars += info.num_chars;
-        }
+        writeln!(
+            writer,
+            "{}{}{}{}{}",
+            format_field(info.num_lines, options.lines),
+            format_field(info.num_words, options.words),
+            format_field(info.num_bytes, options.bytes),
+            format_field(info.num_chars, options.chars),
+            if filename == "-" {
+                "".to_string()
+            } else {
+                format!(" {filename}")
+            },
+        )?;
+
+        total_lines += info.num_lines;
+        total_words += info.num_words;
+        total_bytes += info.num_bytes;
+        total_chars += info.num_chars;
     }
 
     if options.files.len() > 1 {
@@ -69,10 +71,10 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 }
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
-    match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin().lock()))),
-        _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
+    if filename == "-" {
+        return Ok(Box::new(BufReader::new(io::stdin().lock())));
     }
+    Ok(Box::new(BufReader::new(File::open(filename)?)))
 }
 
 fn format_field(value: usize, show: bool) -> String {
