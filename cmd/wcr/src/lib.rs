@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use std::{
     fs::File,
     io::{self, BufRead, BufReader, Write},
@@ -28,7 +28,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let mut total_chars = 0;
 
     for filename in &options.files {
-        let Ok(file) = open(filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+        let Ok(file) = open(filename).inspect_err(|err| eprintln!("{err}")) else {
             continue;
         };
 
@@ -74,7 +74,9 @@ fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     if filename == "-" {
         return Ok(Box::new(BufReader::new(io::stdin().lock())));
     }
-    Ok(Box::new(BufReader::new(File::open(filename)?)))
+    Ok(Box::new(BufReader::new(
+        File::open(filename).map_err(|err| anyhow!("{filename}: {err}"))?,
+    )))
 }
 
 fn format_field(value: usize, show: bool) -> String {

@@ -70,7 +70,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     };
 
     for filename in &options.files {
-        let Ok(file) = open(filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+        let Ok(file) = open(filename).inspect_err(|err| eprintln!("{err}")) else {
             continue;
         };
 
@@ -90,13 +90,15 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
                 }
             }
             Extract::Bytes(byte_pos) => {
-                for line in file.lines() {
-                    writeln!(writer, "{}", extract_bytes(&line?, byte_pos))?;
+                let mut reader = LineReader::new(file);
+                while let Some(line) = reader.read_line()? {
+                    writeln!(writer, "{}", extract_bytes(line, byte_pos))?;
                 }
             }
             Extract::Chars(char_pos) => {
-                for line in file.lines() {
-                    writeln!(writer, "{}", extract_chars(&line?, char_pos))?;
+                let mut reader = LineReader::new(file);
+                while let Some(line) = reader.read_line()? {
+                    writeln!(writer, "{}", extract_chars(line, char_pos))?;
                 }
             }
         }
@@ -105,11 +107,33 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     Ok(())
 }
 
+struct LineReader<R: BufRead> {
+    reader: R,
+    buffer: String,
+}
+
+impl<R: BufRead> LineReader<R> {
+    fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: String::new(),
+        }
+    }
+
+    fn read_line(&mut self) -> Result<Option<&str>> {
+        self.buffer.clear();
+        let n = self.reader.read_line(&mut self.buffer)?;
+        Ok((n > 0).then(|| self.buffer.trim_end()))
+    }
+}
+
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     if filename == "-" {
         return Ok(Box::new(BufReader::new(io::stdin().lock())));
     }
-    Ok(Box::new(BufReader::new(File::open(filename)?)))
+    Ok(Box::new(BufReader::new(
+        File::open(filename).map_err(|err| anyhow!("{filename}: {err}"))?,
+    )))
 }
 
 // Parse an index from a string representation of an integer.

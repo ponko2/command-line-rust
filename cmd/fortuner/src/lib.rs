@@ -88,23 +88,27 @@ fn find_files(paths: &[String]) -> Result<Vec<PathBuf>> {
 
 fn read_fortunes(paths: &[PathBuf]) -> Result<Vec<Fortune>> {
     let mut fortunes = vec![];
-    let mut buffer = vec![];
+    let mut buffer = String::new();
 
     for path in paths {
         let basename = path.file_name().unwrap().to_string_lossy().into_owned();
         let file = File::open(path).map_err(|err| anyhow!("{path:?}: {err}"))?;
 
-        for line in BufReader::new(file).lines().map_while(Result::ok) {
+        let mut reader = LineReader::new(BufReader::new(file));
+        while let Some(line) = reader.read_line()? {
             if line == "%" {
                 if !buffer.is_empty() {
                     fortunes.push(Fortune {
                         source: basename.clone(),
-                        text: buffer.join("\n"),
+                        text: buffer.clone(),
                     });
                     buffer.clear();
                 }
             } else {
-                buffer.push(line);
+                if !buffer.is_empty() {
+                    buffer.push('\n');
+                }
+                buffer.push_str(line);
             }
         }
     }
@@ -118,6 +122,26 @@ fn pick_fortune(fortunes: &[Fortune], seed: Option<u64>) -> Option<String> {
         .unwrap_or_else(|| StdRng::from_rng(&mut rand::rng()));
 
     fortunes.choose(&mut rng).map(|f| f.text.clone())
+}
+
+struct LineReader<R: BufRead> {
+    reader: R,
+    buffer: String,
+}
+
+impl<R: BufRead> LineReader<R> {
+    fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: String::new(),
+        }
+    }
+
+    fn read_line(&mut self) -> Result<Option<&str>> {
+        self.buffer.clear();
+        let n = self.reader.read_line(&mut self.buffer)?;
+        Ok((n > 0).then(|| self.buffer.trim_end()))
+    }
 }
 
 #[cfg(test)]

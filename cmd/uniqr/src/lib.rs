@@ -11,7 +11,7 @@ pub struct Options {
 }
 
 pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
-    let mut file = open(&options.in_file).map_err(|err| anyhow!("{}: {err}", options.in_file))?;
+    let mut file = open(&options.in_file)?;
 
     let mut print = |num: u64, text: &str| -> Result<()> {
         if num > 0 {
@@ -35,7 +35,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
         if line.trim_end() != previous.trim_end() {
             print(count, &previous)?;
-            previous = line.clone();
+            std::mem::swap(&mut previous, &mut line);
             count = 0;
         }
 
@@ -51,5 +51,7 @@ fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     if filename == "-" {
         return Ok(Box::new(BufReader::new(io::stdin().lock())));
     }
-    Ok(Box::new(BufReader::new(File::open(filename)?)))
+    Ok(Box::new(BufReader::new(
+        File::open(filename).map_err(|err| anyhow!("{filename}: {err}"))?,
+    )))
 }
