@@ -23,6 +23,7 @@ jobs:
       - clippy
       - commitlint
       - editorconfig
+      - machete
       - oxfmt
       - rustfmt
       - test
@@ -230,6 +231,31 @@ jobs:
         uses: editorconfig-checker/action-editorconfig-checker@d2ed4fd072ae6f887e9407c909af0f585d2ad9f4 # v2
       - name: Run EditorConfig checker
         run: editorconfig-checker
+  machete:
+    name: Machete
+    if: ${{ always() && !failure() && !cancelled() &&
+      (needs.changed-files.result == 'skipped' || needs.changed-files.outputs.rust == 'true') }}
+    needs: changed-files
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up Nix
+        uses: cachix/install-nix-action@1ca7d21a94afc7c957383a2d217460d980de4934 # v31.10.1
+      - name: Set up Cachix
+        uses: cachix/cachix-action@3ba601ff5bbb07c7220846facfa2cd81eeee15a1 # v16
+        with:
+          name: ponko2
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - name: Install Nix dependencies
+        run: nix develop --command true
+      - name: Run Machete
+        run: nix develop --command cargo machete
   oxfmt:
     name: Oxfmt
     needs: verify-author
