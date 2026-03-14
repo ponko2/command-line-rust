@@ -35,7 +35,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 
         if line.trim_end() != previous.trim_end() {
             print(count, &previous)?;
-            previous = line.clone();
+            std::mem::swap(&mut previous, &mut line);
             count = 0;
         }
 

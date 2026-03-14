@@ -90,19 +90,41 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
                 }
             }
             Extract::Bytes(byte_pos) => {
-                for line in file.lines() {
-                    writeln!(writer, "{}", extract_bytes(&line?, byte_pos))?;
+                let mut reader = LineReader::new(file);
+                while let Some(line) = reader.read_line()? {
+                    writeln!(writer, "{}", extract_bytes(line, byte_pos))?;
                 }
             }
             Extract::Chars(char_pos) => {
-                for line in file.lines() {
-                    writeln!(writer, "{}", extract_chars(&line?, char_pos))?;
+                let mut reader = LineReader::new(file);
+                while let Some(line) = reader.read_line()? {
+                    writeln!(writer, "{}", extract_chars(line, char_pos))?;
                 }
             }
         }
     }
 
     Ok(())
+}
+
+struct LineReader<R: BufRead> {
+    reader: R,
+    buffer: String,
+}
+
+impl<R: BufRead> LineReader<R> {
+    fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: String::new(),
+        }
+    }
+
+    fn read_line(&mut self) -> Result<Option<&str>> {
+        self.buffer.clear();
+        let n = self.reader.read_line(&mut self.buffer)?;
+        Ok((n > 0).then(|| self.buffer.trim_end()))
+    }
 }
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
