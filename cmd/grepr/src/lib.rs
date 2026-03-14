@@ -118,13 +118,13 @@ fn find_files(paths: &[String], recursive: bool) -> Vec<Result<String>> {
             continue;
         }
 
-        for entry in WalkDir::new(path)
-            .into_iter()
-            .flatten()
-            .filter(|e| e.file_type().is_file())
-        {
-            results.push(Ok(entry.path().display().to_string()));
-        }
+        results.extend(
+            WalkDir::new(path)
+                .into_iter()
+                .flatten()
+                .filter(|e| e.file_type().is_file())
+                .map(|e| Ok(e.path().display().to_string())),
+        );
     }
 
     results
