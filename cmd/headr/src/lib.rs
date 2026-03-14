@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use std::{
     fs::File,
     io::{self, BufRead, BufReader, Read, Write},
@@ -15,7 +15,7 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let num_files = options.files.len();
 
     for (file_num, filename) in options.files.iter().enumerate() {
-        let Ok(mut file) = open(filename).inspect_err(|err| eprintln!("{filename}: {err}")) else {
+        let Ok(mut file) = open(filename).inspect_err(|err| eprintln!("{err}")) else {
             continue;
         };
 
@@ -52,5 +52,7 @@ fn open(filename: &str) -> Result<Box<dyn BufRead>> {
     if filename == "-" {
         return Ok(Box::new(BufReader::new(io::stdin().lock())));
     }
-    Ok(Box::new(BufReader::new(File::open(filename)?)))
+    Ok(Box::new(BufReader::new(
+        File::open(filename).map_err(|err| anyhow!("{filename}: {err}"))?,
+    )))
 }
