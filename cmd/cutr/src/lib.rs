@@ -106,10 +106,10 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
 }
 
 fn open(filename: &str) -> Result<Box<dyn BufRead>> {
-    match filename {
-        "-" => Ok(Box::new(BufReader::new(io::stdin().lock()))),
-        _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
+    if filename == "-" {
+        return Ok(Box::new(BufReader::new(io::stdin().lock())));
     }
+    Ok(Box::new(BufReader::new(File::open(filename)?)))
 }
 
 // Parse an index from a string representation of an integer.
@@ -120,13 +120,12 @@ fn open(filename: &str) -> Result<Box<dyn BufRead>> {
 fn parse_index(input: &str) -> Result<usize> {
     let value_error = || anyhow!(r#"illegal list value: "{input}""#);
     if input.starts_with('+') {
-        Err(value_error())
-    } else {
-        input
-            .parse::<NonZeroUsize>()
-            .map(|n| usize::from(n) - 1)
-            .map_err(|_| value_error())
+        return Err(value_error());
     }
+    input
+        .parse::<NonZeroUsize>()
+        .map(|n| usize::from(n) - 1)
+        .map_err(|_| value_error())
 }
 
 fn parse_pos(range: &str) -> Result<PositionList> {

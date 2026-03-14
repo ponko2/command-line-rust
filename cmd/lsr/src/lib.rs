@@ -35,10 +35,10 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     let paths = find_files(&options.paths, options.show_hidden)?;
     if options.long {
         writeln!(writer, "{}", format_output(&paths)?)?;
-    } else {
-        for path in paths {
-            writeln!(writer, "{}", path.display())?;
-        }
+        return Ok(());
+    }
+    for path in paths {
+        writeln!(writer, "{}", path.display())?;
     }
     Ok(())
 }

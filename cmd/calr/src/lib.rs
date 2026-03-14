@@ -41,26 +41,24 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     }
     let year = year.unwrap_or(today.year());
 
-    match month {
-        Some(month) => {
-            let lines = format_month(year, month, true, today);
-            writeln!(writer, "{}", lines.join("\n"))?;
-        }
-        None => {
-            writeln!(writer, "{year:>32}")?;
-            let months: Vec<_> = (1..=12)
-                .map(|month| format_month(year, month, false, today))
-                .collect();
+    if let Some(month) = month {
+        let lines = format_month(year, month, true, today);
+        writeln!(writer, "{}", lines.join("\n"))?;
+        return Ok(());
+    }
 
-            for (i, chunk) in months.chunks(3).enumerate() {
-                if let [m1, m2, m3] = chunk {
-                    for lines in izip!(m1, m2, m3) {
-                        writeln!(writer, "{}{}{}", lines.0, lines.1, lines.2)?;
-                    }
-                    if i < 3 {
-                        writeln!(writer)?;
-                    }
-                }
+    writeln!(writer, "{year:>32}")?;
+    let months: Vec<_> = (1..=12)
+        .map(|month| format_month(year, month, false, today))
+        .collect();
+
+    for (i, chunk) in months.chunks(3).enumerate() {
+        if let [m1, m2, m3] = chunk {
+            for lines in izip!(m1, m2, m3) {
+                writeln!(writer, "{}{}{}", lines.0, lines.1, lines.2)?;
+            }
+            if i < 3 {
+                writeln!(writer)?;
             }
         }
     }
