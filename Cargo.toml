@@ -6,7 +6,7 @@ members = ["cmd/*"]
 anyhow = { version = "1.0.102", default-features = false }
 assert_cmd = "2.2.0"
 chrono = { version = "0.4.44", features = ["clock"], default-features = false }
-clap = { version = "4.5.60", features = ["derive"] }
+clap = { version = "4.5.61", features = ["derive"] }
 csv = "1.4.0"
 itertools = { version = "0.14.0", default-features = false }
 num = { version = "0.4.3", default-features = false }
