@@ -158,7 +158,9 @@ jobs:
       - name: Install Nix dependencies
         run: nix develop --command true
       - name: Cache dependencies
-        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          cmd-format: nix develop -c {0}
       - name: Run Build
         run: nix develop --command cargo build --locked
   clippy:
@@ -185,7 +187,9 @@ jobs:
       - name: Install Nix dependencies
         run: nix develop --command true
       - name: Cache dependencies
-        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          cmd-format: nix develop -c {0}
       - name: Run Clippy
         run: nix develop --command cargo clippy -- -D warnings
   commitlint:
@@ -301,7 +305,9 @@ jobs:
       - name: Install Nix dependencies
         run: nix develop --command true
       - name: Cache dependencies
-        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          cmd-format: nix develop -c {0}
       - name: Run rustfmt
         run: nix develop --command cargo fmt --check
   test:
@@ -328,7 +334,9 @@ jobs:
       - name: Install Nix dependencies
         run: nix develop --command true
       - name: Cache dependencies
-        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          cmd-format: nix develop -c {0}
       - name: Set test permissions
         run: ./cmd/lsr/set-test-perms.sh ./cmd/lsr
       - name: Run Test
