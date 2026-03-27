@@ -2,6 +2,7 @@ name: setup-nix
 description: Set up a Nix environment
 inputs:
   cachix-auth-token:
+    description: Authentication token for Cachix
     required: true
   prefetch-dependencies:
     description: Run `nix develop --command true` after setup.
