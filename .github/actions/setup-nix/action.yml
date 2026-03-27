@@ -5,7 +5,7 @@ inputs:
     description: Authentication token for Cachix
     required: true
   prefetch-dependencies:
-    description: Run `nix develop --command true` after setup.
+    description: Run `nix --quiet develop --command true` after setup.
     required: false
     default: "true"
 runs:
