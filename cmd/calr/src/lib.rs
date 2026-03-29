@@ -1,6 +1,6 @@
 use anyhow::{Result, bail};
 use chrono::{Datelike, Duration, Local, NaiveDate};
-use itertools::izip;
+use itertools::{Itertools, izip};
 use owo_colors::OwoColorize;
 use std::io::Write;
 
@@ -48,18 +48,17 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
     }
 
     writeln!(writer, "{year:>32}")?;
-    let months: Vec<_> = (1..=12)
-        .map(|month| format_month(year, month, false, today))
-        .collect();
 
-    for (i, chunk) in months.chunks(3).enumerate() {
-        if let [m1, m2, m3] = chunk {
-            for lines in izip!(m1, m2, m3) {
-                writeln!(writer, "{}{}{}", lines.0, lines.1, lines.2)?;
-            }
-            if i < 3 {
-                writeln!(writer)?;
-            }
+    for (i, (m1, m2, m3)) in (1..=12)
+        .map(|month| format_month(year, month, false, today))
+        .tuples()
+        .enumerate()
+    {
+        for lines in izip!(&m1, &m2, &m3) {
+            writeln!(writer, "{}{}{}", lines.0, lines.1, lines.2)?;
+        }
+        if i < 3 {
+            writeln!(writer)?;
         }
     }
 
@@ -75,22 +74,15 @@ fn parse_month(month: &str) -> Result<u32> {
         }
     } else {
         let lower = &month.to_ascii_lowercase();
-        let matches: Vec<_> = MONTH_NAMES
-            .iter()
-            .enumerate()
-            .filter_map(|(i, name)| {
-                if name.to_ascii_lowercase().starts_with(lower) {
-                    Some(i + 1)
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let matches = MONTH_NAMES.iter().enumerate().filter_map(|(i, name)| {
+            name.to_ascii_lowercase()
+                .starts_with(lower)
+                .then_some(i + 1)
+        });
 
-        if matches.len() == 1 {
-            Ok(matches[0] as u32)
-        } else {
-            bail!(r#"Invalid month "{month}""#)
+        match matches.exactly_one() {
+            Ok(m) => Ok(m as u32),
+            Err(_) => bail!(r#"Invalid month "{month}""#),
         }
     }
 }
@@ -109,21 +101,19 @@ fn last_day_in_month(year: i32, month: u32) -> NaiveDate {
 
 fn format_month(year: i32, month: u32, print_year: bool, today: NaiveDate) -> Vec<String> {
     let first = NaiveDate::from_ymd_opt(year, month, 1).unwrap();
-    let mut days: Vec<String> = (1..first.weekday().number_from_sunday())
-        .map(|_| "  ".to_string()) // two spaces
-        .collect();
-
     let is_today = |day: u32| year == today.year() && month == today.month() && day == today.day();
-
     let last = last_day_in_month(year, month);
-    days.extend((first.day()..=last.day()).map(|num| {
-        let fmt = format!("{num:>2}");
-        if is_today(num) {
-            fmt.reversed().to_string()
-        } else {
-            fmt
-        }
-    }));
+    let days: Vec<String> = (1..first.weekday().number_from_sunday())
+        .map(|_| "  ".to_string()) // two spaces
+        .chain((first.day()..=last.day()).map(|num| {
+            let fmt = format!("{num:>2}");
+            if is_today(num) {
+                fmt.reversed().to_string()
+            } else {
+                fmt
+            }
+        }))
+        .collect();
 
     let month_name = MONTH_NAMES[month as usize - 1];
     let mut lines = Vec::with_capacity(8);

@@ -1,4 +1,5 @@
 use anyhow::{Result, anyhow, bail};
+use itertools::Itertools;
 use rand::{SeedableRng, prelude::IndexedRandom, rngs::StdRng};
 use regex::RegexBuilder;
 use std::{
@@ -48,16 +49,15 @@ pub fn run(writer: &mut impl Write, options: &Options) -> Result<()> {
         return Ok(());
     };
 
-    let mut prev_source = "";
-    for fortune in fortunes
+    for (source, group) in &fortunes
         .iter()
         .filter(|fortune| pattern.is_match(&fortune.text))
+        .chunk_by(|fortune| &fortune.source)
     {
-        if prev_source != fortune.source {
-            eprintln!("({})\n%", fortune.source);
-            prev_source = &fortune.source;
+        eprintln!("({})\n%", source);
+        for fortune in group {
+            writeln!(writer, "{}\n%", fortune.text)?;
         }
-        writeln!(writer, "{}\n%", fortune.text)?;
     }
 
     Ok(())
