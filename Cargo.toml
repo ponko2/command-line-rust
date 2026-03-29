@@ -16,11 +16,7 @@ pretty_assertions = "1.4.1"
 rand = "0.10.0"
 regex = "1.12.3"
 sysinfo = { version = "0.38.4", features = ["system"], default-features = false }
-tabled = { version = "0.20.0", features = [
-  "derive",
-  "macros",
-  "testing_table",
-], default-features = false }
+tabled = { version = "0.20.0", features = ["derive"], default-features = false }
 tempfile = { version = "3.27.0", default-features = false }
 uzers = { version = "0.12.2", default-features = false }
 walkdir = "2.5.0"
