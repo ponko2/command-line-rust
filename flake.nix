@@ -33,9 +33,17 @@
               type = "app";
               program = "${pkgs.commitlint}/bin/commitlint";
             };
+            deadnix = {
+              type = "app";
+              program = "${pkgs.deadnix}/bin/deadnix";
+            };
             oxfmt = {
               type = "app";
               program = "${pkgs.oxfmt}/bin/oxfmt";
+            };
+            statix = {
+              type = "app";
+              program = "${pkgs.statix}/bin/statix";
             };
           };
           devShells.default = pkgs.mkShell {
@@ -48,10 +56,14 @@
               cargo-machete
               cargo-nextest
               commitlint
+              deadnix
               editorconfig-checker
               lefthook
+              nixd
+              nixfmt-rfc-style
               oxfmt
               rust-analyzer
+              statix
               yamllint
             ];
           };
