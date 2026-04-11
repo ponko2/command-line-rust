@@ -3,7 +3,19 @@
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
+  "nix.enableLanguageServer": true,
+  "nix.serverPath": "nixd",
+  "nix.serverSettings": {
+    "nixd": {
+      "formatting": {
+        "command": ["nixfmt"]
+      }
+    }
+  },
   "rust-analyzer.check.command": "clippy",
+  "[nix]": {
+    "editor.defaultFormatter": "jnoortheen.nix-ide"
+  },
   "[rust]": {
     "editor.defaultFormatter": "rust-lang.rust-analyzer"
   }
