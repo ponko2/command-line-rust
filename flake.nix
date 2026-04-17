@@ -50,7 +50,7 @@
             packages = with pkgs; [
               (pkgs.fenix.fromToolchainFile {
                 file = ./rust-toolchain.toml;
-                sha256 = "qqF33vNuAdU5vua96VKVIwuc43j4EFeEXbjQ6+l4mO4=";
+                sha256 = "gh/xTkxKHL4eiRXzWv8KP7vfjSk61Iq48x47BEDFgfk=";
               })
               cargo-features-manager
               cargo-machete
