@@ -13,7 +13,7 @@ num = { version = "0.4.3", default-features = false }
 owo-colors = "4.3.0"
 predicates = { version = "3.1.4", features = ["regex"], default-features = false }
 pretty_assertions = "1.4.1"
-rand = "0.10.0"
+rand = "0.10.1"
 regex = "1.12.3"
 sysinfo = { version = "0.38.4", features = ["system"], default-features = false }
 tabled = { version = "0.20.0", features = ["derive"], default-features = false }
