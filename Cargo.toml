@@ -4,7 +4,7 @@ members = ["cmd/*"]
 
 [workspace.dependencies]
 anyhow = { version = "1.0.102", default-features = false }
-assert_cmd = "2.2.0"
+assert_cmd = "2.2.1"
 chrono = { version = "0.4.44", features = ["clock"], default-features = false }
 clap = { version = "4.6.1", features = ["derive"] }
 csv = "1.4.0"
