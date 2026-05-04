@@ -1,0 +1,38 @@
+[
+  {
+    "label": "rust: cargo build",
+    "command": "cargo",
+    "args": ["build"],
+    "cwd": "$ZED_DIRNAME"
+  },
+  {
+    "label": "rust: cargo check",
+    "command": "cargo",
+    "args": ["check"],
+    "cwd": "$ZED_DIRNAME"
+  },
+  {
+    "label": "rust: cargo clean",
+    "command": "cargo",
+    "args": ["clean"],
+    "cwd": "$ZED_DIRNAME"
+  },
+  {
+    "label": "rust: cargo clippy",
+    "command": "cargo",
+    "args": ["clippy"],
+    "cwd": "$ZED_DIRNAME"
+  },
+  {
+    "label": "rust: cargo nextest run",
+    "command": "cargo",
+    "args": ["nextest", "run"],
+    "cwd": "$ZED_DIRNAME"
+  },
+  {
+    "label": "rust: cargo run",
+    "command": "cargo",
+    "args": ["run"],
+    "cwd": "$ZED_DIRNAME"
+  }
+]
