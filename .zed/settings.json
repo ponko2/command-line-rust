@@ -1,0 +1,89 @@
+{
+  "languages": {
+    "JSON": {
+      "formatter": [
+        {
+          "language_server": {
+            "name": "oxfmt"
+          }
+        }
+      ],
+      "prettier": {
+        "allowed": false
+      }
+    },
+    "JSONC": {
+      "formatter": [
+        {
+          "language_server": {
+            "name": "oxfmt"
+          }
+        }
+      ],
+      "prettier": {
+        "allowed": false
+      }
+    },
+    "Markdown": {
+      "formatter": [
+        {
+          "language_server": {
+            "name": "oxfmt"
+          }
+        }
+      ],
+      "prettier": {
+        "allowed": false
+      }
+    },
+    "Nix": {
+      "formatter": {
+        "language_server": {
+          "name": "nixd"
+        }
+      }
+    },
+    "Rust": {
+      "formatter": {
+        "language_server": {
+          "name": "rust-analyzer"
+        }
+      }
+    },
+    "YAML": {
+      "formatter": [
+        {
+          "language_server": {
+            "name": "oxfmt"
+          }
+        }
+      ],
+      "prettier": {
+        "allowed": false
+      }
+    }
+  },
+  "lsp": {
+    "nixd": {
+      "initialization_options": {
+        "formatting": {
+          "command": ["nixfmt"]
+        }
+      }
+    },
+    "oxfmt": {
+      "initialization_options": {
+        "settings": {
+          "run": "onSave"
+        }
+      }
+    },
+    "rust-analyzer": {
+      "initialization_options": {
+        "check": {
+          "command": "clippy"
+        }
+      }
+    }
+  }
+}
