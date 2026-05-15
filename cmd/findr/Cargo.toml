@@ -17,3 +17,6 @@ predicates.workspace = true
 pretty_assertions.workspace = true
 rand.workspace = true
 
+[lib]
+doctest = false
+test = false
