@@ -53,8 +53,8 @@
                 sha256 = "gh/xTkxKHL4eiRXzWv8KP7vfjSk61Iq48x47BEDFgfk=";
               })
               cargo-features-manager
-              cargo-machete
               cargo-nextest
+              cargo-shear
               commitlint
               deadnix
               editorconfig-checker
