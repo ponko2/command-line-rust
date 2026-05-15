@@ -16,3 +16,6 @@ owo-colors.workspace = true
 assert_cmd.workspace = true
 predicates.workspace = true
 pretty_assertions.workspace = true
+
+[lib]
+doctest = false
