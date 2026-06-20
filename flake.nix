@@ -60,7 +60,7 @@
               editorconfig-checker
               lefthook
               nixd
-              nixfmt-rfc-style
+              nixfmt
               oxfmt
               rust-analyzer
               statix
