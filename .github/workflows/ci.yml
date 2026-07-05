@@ -65,13 +65,14 @@ jobs:
             dependencies: &dependencies
               - flake.lock
               - flake.nix
+              - rust-toolchain.toml
             actions:
               - "**/action.{yaml,yml}"
               - ".github/workflows/*.{yaml,yml}"
             nix:
               - *common
+              - *dependencies
               - "**/*.nix"
-              - flake.lock
             rust:
               - *common
               - *dependencies
