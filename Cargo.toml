@@ -14,7 +14,7 @@ predicates = { version = "3.1.4", features = ["regex"], default-features = false
 pretty_assertions = "1.4.1"
 rand = "0.10.2"
 regex = "1.12.4"
-sysinfo = { version = "0.39.5", features = ["system"], default-features = false }
+sysinfo = { version = "0.39.6", features = ["system"], default-features = false }
 tabled = { version = "0.21.0", features = ["derive"], default-features = false }
 tempfile = { version = "3.27.0", default-features = false }
 uzers = { version = "0.12.2", default-features = false }
