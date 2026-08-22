@@ -37,6 +37,10 @@
               type = "app";
               program = "${pkgs.deadnix}/bin/deadnix";
             };
+            editorconfig-checker = {
+              type = "app";
+              program = "${pkgs.editorconfig-checker}/bin/editorconfig-checker";
+            };
             oxfmt = {
               type = "app";
               program = "${pkgs.oxfmt}/bin/oxfmt";
