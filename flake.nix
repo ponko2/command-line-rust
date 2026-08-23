@@ -62,7 +62,7 @@
               commitlint
               deadnix
               editorconfig-checker
-              lefthook
+              hk
               nixd
               nixfmt
               oxfmt
