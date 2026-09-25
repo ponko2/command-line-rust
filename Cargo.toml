@@ -12,7 +12,7 @@ itertools = { version = "0.15.0", features = ["use_alloc"], default-features = f
 owo-colors = "4.4.0"
 predicates = { version = "3.1.4", features = ["regex"], default-features = false }
 pretty_assertions = "1.4.1"
-rand = "0.10.2"
+rand = "0.10.3"
 regex = "1.13.1"
 sysinfo = { version = "0.39.6", features = ["system"], default-features = false }
 tabled = { version = "0.22.0", features = ["derive"], default-features = false }
