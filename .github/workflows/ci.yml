@@ -34,6 +34,7 @@ jobs:
       - name: Fail if any required jobs failed or cancelled
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         run: exit 1
+        shell: bash
   changed-files:
     name: Get changed files
     if: ${{ github.event_name == 'pull_request' }}
@@ -104,6 +105,7 @@ jobs:
           prefetch-dependencies: false
       - name: Run jactionlint
         run: nix --quiet run .#jactionlint -- --format=github --color
+        shell: bash
   build:
     name: Build
     if: ${{ always() && !failure() && !cancelled() &&
@@ -129,6 +131,7 @@ jobs:
           key: ${{ hashFiles('flake.lock', 'flake.nix') }}
       - name: Run Build
         run: nix develop --command cargo build --locked
+        shell: bash
   clippy:
     name: Clippy
     if: ${{ always() && !failure() && !cancelled() &&
@@ -154,6 +157,7 @@ jobs:
           key: ${{ hashFiles('flake.lock', 'flake.nix') }}
       - name: Run Clippy
         run: nix develop --command cargo clippy -- -D warnings
+        shell: bash
   commitlint:
     name: commitlint
     if: ${{ github.event_name == 'pull_request' }}
@@ -178,6 +182,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: nix --quiet run .#commitlint -- --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+        shell: bash
   deadnix:
     name: deadnix
     if: ${{ always() && !failure() && !cancelled() &&
@@ -199,6 +204,7 @@ jobs:
           prefetch-dependencies: false
       - name: Run deadnix
         run: nix --quiet run .#deadnix
+        shell: bash
   editorconfig:
     name: EditorConfig
     runs-on: ubuntu-26.04
@@ -217,6 +223,7 @@ jobs:
           prefetch-dependencies: false
       - name: Run EditorConfig checker
         run: nix --quiet run .#editorconfig-checker
+        shell: bash
   nixfmt:
     name: Nixfmt
     if: ${{ always() && !failure() && !cancelled() &&
@@ -238,6 +245,7 @@ jobs:
           prefetch-dependencies: false
       - name: Run Nixfmt
         run: nix fmt -- --ci
+        shell: bash
   oxfmt:
     name: Oxfmt
     runs-on: ubuntu-26.04
@@ -256,6 +264,7 @@ jobs:
           prefetch-dependencies: false
       - name: Run Oxfmt
         run: nix --quiet run .#oxfmt -- --check
+        shell: bash
   rustfmt:
     name: rustfmt
     if: ${{ always() && !failure() && !cancelled() &&
@@ -281,6 +290,7 @@ jobs:
           key: ${{ hashFiles('flake.lock', 'flake.nix') }}
       - name: Run rustfmt
         run: nix develop --command cargo fmt --check
+        shell: bash
   shear:
     name: Shear
     if: ${{ always() && !failure() && !cancelled() &&
@@ -301,6 +311,7 @@ jobs:
           cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - name: Run Shear
         run: nix develop --command cargo shear --deny-warnings
+        shell: bash
   statix:
     name: statix
     if: ${{ always() && !failure() && !cancelled() &&
@@ -322,6 +333,7 @@ jobs:
           prefetch-dependencies: false
       - name: Run statix
         run: nix --quiet run .#statix -- check
+        shell: bash
   test:
     name: Test
     if: ${{ always() && !failure() && !cancelled() &&
@@ -347,8 +359,10 @@ jobs:
           key: ${{ hashFiles('flake.lock', 'flake.nix') }}
       - name: Set test permissions
         run: ./cmd/lsr/set-test-perms.sh ./cmd/lsr
+        shell: bash
       - name: Run Test
         run: nix develop --command cargo nextest run --locked
+        shell: bash
   yamllint:
     name: yamllint
     if: ${{ always() && !failure() && !cancelled() &&
@@ -370,3 +384,4 @@ jobs:
           prefetch-dependencies: false
       - name: Run yamllint
         run: nix --quiet run .#yamllint -- --format=github --strict .
+        shell: bash
