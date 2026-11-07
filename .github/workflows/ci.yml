@@ -127,13 +127,10 @@ jobs:
         uses: ponko2/actions/setup-nix@v1.8.0
         with:
           cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2.9.3
-        with:
-          cmd-format: nix develop -c {0}
-          key: ${{ hashFiles('flake.lock', 'flake.nix') }}
+      - name: Set up mr boxington
+        uses: jdx/mr-boxington-action@v1.7.3
       - name: Run Build
-        run: nix develop --command cargo build --locked
+        run: nix develop --command mbx build --locked
         shell: bash
   clippy:
     name: Clippy
@@ -153,13 +150,10 @@ jobs:
         uses: ponko2/actions/setup-nix@v1.8.0
         with:
           cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2.9.3
-        with:
-          cmd-format: nix develop -c {0}
-          key: ${{ hashFiles('flake.lock', 'flake.nix') }}
+      - name: Set up mr boxington
+        uses: jdx/mr-boxington-action@v1.7.3
       - name: Run Clippy
-        run: nix develop --command cargo clippy -- -D warnings
+        run: nix develop --command mbx clippy -- -D warnings
         shell: bash
   commitlint:
     name: commitlint
@@ -277,13 +271,10 @@ jobs:
         uses: ponko2/actions/setup-nix@v1.8.0
         with:
           cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2.9.3
-        with:
-          cmd-format: nix develop -c {0}
-          key: ${{ hashFiles('flake.lock', 'flake.nix') }}
+      - name: Set up mr boxington
+        uses: jdx/mr-boxington-action@v1.7.3
       - name: Run rustfmt
-        run: nix develop --command cargo fmt --check
+        run: nix develop --command mbx fmt --check
         shell: bash
   ryl:
     name: ryl
@@ -325,8 +316,10 @@ jobs:
         uses: ponko2/actions/setup-nix@v1.8.0
         with:
           cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - name: Set up mr boxington
+        uses: jdx/mr-boxington-action@v1.7.3
       - name: Run Shear
-        run: nix develop --command cargo shear --deny-warnings
+        run: nix develop --command mbx shear --deny-warnings
         shell: bash
   statix:
     name: statix
@@ -368,14 +361,11 @@ jobs:
         uses: ponko2/actions/setup-nix@v1.8.0
         with:
           cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2.9.3
-        with:
-          cmd-format: nix develop -c {0}
-          key: ${{ hashFiles('flake.lock', 'flake.nix') }}
+      - name: Set up mr boxington
+        uses: jdx/mr-boxington-action@v1.7.3
       - name: Set test permissions
         run: ./cmd/lsr/set-test-perms.sh ./cmd/lsr
         shell: bash
       - name: Run Test
-        run: nix develop --command cargo nextest run --locked
+        run: nix develop --command mbx nextest run --locked
         shell: bash
