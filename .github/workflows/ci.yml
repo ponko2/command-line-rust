@@ -118,7 +118,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up mr boxington
-        uses: jdx/mr-boxington-action@v1.7.3
+        uses: jdx/mr-boxington-action@v1.7.4
       - name: Run Build
         run: mbx build --locked
         shell: bash
@@ -137,7 +137,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up mr boxington
-        uses: jdx/mr-boxington-action@v1.7.3
+        uses: jdx/mr-boxington-action@v1.7.4
       - name: Run Clippy
         run: mbx clippy -- -D warnings
         shell: bash
@@ -294,7 +294,7 @@ jobs:
         with:
           cache_key_prefix: mise-v1-${{ github.job }}
       - name: Set up mr boxington
-        uses: jdx/mr-boxington-action@v1.7.3
+        uses: jdx/mr-boxington-action@v1.7.4
       - name: Set test permissions
         run: ./cmd/lsr/set-test-perms.sh ./cmd/lsr
         shell: bash
